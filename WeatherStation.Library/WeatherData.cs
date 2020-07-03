@@ -14,6 +14,8 @@ namespace WeatherStation.Library
         public float WindSpeed { get; set; }
         public int WindDirection { get; set; }
         public int ChanceOfRain { get; set; }
+        public float PrecipitationSummary { get; set; }
         public int WeatherCode { get; set; }
+        public string WeatherDescription { get; set; }
     }
 }

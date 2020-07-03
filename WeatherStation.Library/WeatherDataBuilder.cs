@@ -79,9 +79,25 @@ namespace WeatherStation.Library
             return Do(x => x.ChanceOfRain = value);
         }
 
+        public WeatherDataBuilder SetPrecipitationSummary(float value)
+        {
+            if (value < 0)
+                throw new InvalidOperationException("Precipitation summary cannot be smaller than 0");
+
+            return Do(x => x.PrecipitationSummary = value);
+        }
+
         public WeatherDataBuilder SetWeatherCode(int value)
         {
             return Do(x => x.WeatherCode = value);
+        }
+
+        public WeatherDataBuilder SetWeatherDescription(string value)
+        {
+            if(value == string.Empty)
+                throw new NullReferenceException("Description cannot be empty");
+
+            return Do(x => x.WeatherDescription = value);
         }
 
 
