@@ -1,16 +1,19 @@
-﻿using System;
+﻿using Prism;
+using Prism.Ioc;
+using WeatherStation.App.ViewModels;
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
 
 namespace WeatherStation.App
 {
-    public partial class App : Application
+    public partial class App 
     {
-        public App()
+        public App() : this(null)
         {
-            InitializeComponent();
+        }
 
-            MainPage = new MainPage();
+        public App(IPlatformInitializer initializer) : base(initializer)
+        {
+
         }
 
         protected override void OnStart()
@@ -19,6 +22,20 @@ namespace WeatherStation.App
 
         protected override void OnSleep()
         {
+        }
+
+        protected override void RegisterTypes(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.RegisterForNavigation<NavigationPage>();
+            containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
+            
+        }
+
+        protected override async void OnInitialized()
+        {
+            InitializeComponent();
+
+           await  NavigationService.NavigateAsync("NavigationPage/MainPage");
         }
 
         protected override void OnResume()
