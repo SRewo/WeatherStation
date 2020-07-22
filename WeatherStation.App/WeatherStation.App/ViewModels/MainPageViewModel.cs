@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Prism.Commands;
@@ -12,20 +11,30 @@ namespace WeatherStation.App.ViewModels
 {
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
-        private IBasicWeatherRepository _repository;
-        private IContainsDailyForecast _dailyForecast;
-        private IContainsHourlyForecast _hourlyForecast;
-        private IDateProvider _dateProvider;
+        private readonly IDateProvider _dateProvider;
+        private readonly IWeatherRepository _repository;
+
+
+        private IEnumerable<WeatherData> _weatherDailyData;
 
         private WeatherData _weatherData;
+
+        private IEnumerable<WeatherData> _weatherHourlyData;
+
+        public MainPageViewModel(IDateProvider dateProvider, IWeatherRepository repository)
+        {
+            ContainsDailyForecasts = repository.DailyRepository != null;
+            ContainsHourlyForecasts = repository.DailyRepository != null;
+            _dateProvider = dateProvider;
+            _repository = repository;
+            GetDataCommand = new DelegateCommand(async () => { await GetData(); });
+        }
 
         public WeatherData WeatherData
         {
             get => _weatherData;
             set => SetProperty(ref _weatherData, value);
         }
-
-        private IEnumerable<WeatherData> _weatherHourlyData;
 
         public IEnumerable<WeatherData> WeatherHourlyData
         {
@@ -37,41 +46,10 @@ namespace WeatherStation.App.ViewModels
         public bool ContainsHourlyForecasts { get; set; }
         public DelegateCommand GetDataCommand { get; set; }
 
-
-        private IEnumerable<WeatherData> _weatherDailyData;
-
-        public MainPageViewModel(IBasicWeatherRepository repository, IContainsDailyForecast dailyForecast, IContainsHourlyForecast hourlyForecast, IDateProvider dateProvider)
-        {
-            _repository = repository ?? throw new NullReferenceException();
-            _dailyForecast = dailyForecast;
-            ContainsDailyForecasts = dailyForecast != null;
-            _hourlyForecast = hourlyForecast;
-            ContainsHourlyForecasts = hourlyForecast != null;
-            _dateProvider = dateProvider;
-            GetDataCommand = new DelegateCommand(async () =>
-            {
-                await GetData();
-            });
-        }
-
         public IEnumerable<WeatherData> WeatherDailyData
         {
             get => _weatherDailyData;
             set => SetProperty(ref _weatherDailyData, value);
-        }
-
-        public async Task GetData()
-        {
-            if (WeatherData == null || _dateProvider.GetActualDateTime() - WeatherData.Date > TimeSpan.FromMinutes(30))
-            {
-                WeatherData = await _repository.GetCurrentWeather();
-                WeatherHourlyData = ContainsHourlyForecasts
-                    ? await _hourlyForecast.GetHourlyForecast()
-                    : new List<WeatherData>();
-                WeatherDailyData = ContainsDailyForecasts
-                    ? await _dailyForecast.GetDailyForecast()
-                    : new List<WeatherData>();
-            }
         }
 
         public void OnNavigatedFrom(INavigationParameters parameters)
@@ -81,6 +59,20 @@ namespace WeatherStation.App.ViewModels
         public void OnNavigatedTo(INavigationParameters parameters)
         {
             GetData();
+        }
+
+        public async Task GetData()
+        {
+            if (WeatherData == null || _dateProvider.GetActualDateTime() - WeatherData.Date > TimeSpan.FromMinutes(30))
+            {
+                WeatherData = await _repository.GetCurrentWeather();
+                WeatherHourlyData = ContainsHourlyForecasts
+                    ? await _repository.HourlyRepository.GetHourlyForecast()
+                    : new List<WeatherData>();
+                WeatherDailyData = ContainsDailyForecasts
+                    ? await _repository.DailyRepository.GetDailyForecast()
+                    : new List<WeatherData>();
+            }
         }
     }
 }
