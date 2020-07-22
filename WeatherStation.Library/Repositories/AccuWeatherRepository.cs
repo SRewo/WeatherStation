@@ -14,7 +14,7 @@ using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories
 {
-    public class AccuWeatherRepository : IContainsDailyForecast, IContainsHourlyForecast, IContainsHistoricalData
+    public class AccuWeatherRepository : IWeatherRepository ,IContainsDailyForecast, IContainsHourlyForecast, IContainsHistoricalData
     {
         private string _key;
         private IDateProvider _dateProvider;
@@ -40,6 +40,7 @@ namespace WeatherStation.Library.Repositories
             _client = client;
         }
 
+        public string RepositoryName { get; set; } = "AccuWeather";
         public float Latitude { get; set; }
         public float Longitude { get; set; }
         public async Task<WeatherData> GetCurrentWeather()
@@ -279,5 +280,8 @@ namespace WeatherStation.Library.Repositories
             return d.Key;
         }
 
+        public IContainsDailyForecast DailyRepository => this;
+        public IContainsHistoricalData HistoricalRepository => this;
+        public IContainsHourlyForecast HourlyRepository => this;
     }
 }
