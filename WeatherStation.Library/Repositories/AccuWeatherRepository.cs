@@ -16,6 +16,16 @@ namespace WeatherStation.Library.Repositories
 {
     public class AccuWeatherRepository : IWeatherRepository ,IContainsDailyForecast, IContainsHourlyForecast, IContainsHistoricalData
     {
+        public static AccuWeatherRepository CreateInstanceWithCityCode(string key, string cityCode, IDateProvider provider, IRestClient client)
+        {
+            return new AccuWeatherRepository(key, cityCode, provider, client);
+        }
+
+        public static AccuWeatherRepository CreateInstanceWithCoordinates(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
+        {
+            return new AccuWeatherRepository(key, latitude, longitude, provider, client);
+        }
+
         private string _key;
         private IDateProvider _dateProvider;
         private IRestClient _client;
@@ -23,7 +33,7 @@ namespace WeatherStation.Library.Repositories
         public string CityCode { get; set; }
         public string Language { get; set; }
 
-        public AccuWeatherRepository(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
+        private AccuWeatherRepository(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
         {
             _key = key;
             Latitude = latitude;
@@ -32,7 +42,7 @@ namespace WeatherStation.Library.Repositories
             _client = client;
         }
 
-        public AccuWeatherRepository(string key, string cityCode, IDateProvider provider, IRestClient client)
+        private AccuWeatherRepository(string key, string cityCode, IDateProvider provider, IRestClient client)
         {
             _key = key;
             CityCode = cityCode;
