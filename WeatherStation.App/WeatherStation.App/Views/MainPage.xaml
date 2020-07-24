@@ -3,14 +3,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mvvm="http://prismlibrary.com"
              mc:Ignorable="d"
-             x:Class="WeatherStation.App.MainPage">
+             x:Class="WeatherStation.App.MainPage"
+             mvvm:ViewModelLocator.AutowireViewModel="True"   
+             Title="Ćwiklice">
 
     <StackLayout>
-        <!-- Place new controls here -->
-        <Label Text="Welcome to Xamarin.Forms!" 
-           HorizontalOptions="Center"
-           VerticalOptions="CenterAndExpand" />
+        <Grid Margin="5,5,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"></RowDefinition>
+                <RowDefinition Height="4*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Image Source="https://image.flaticon.com/icons/svg/3093/3093303.svg"/>
+            <StackLayout Grid.Row="0" Grid.Column="1">
+                <Label FontFamily="Roboto" FontSize="18" TextColor="black">12:40 Poniedziałek</Label>
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">Słonecznie</Label>
+                <Label FontSize="32" FontFamily="Roboto" TextColor="Black">14° C | 15° C</Label>
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">1024 hPa</Label>   
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">Wilgotność: 40%</Label>
+            </StackLayout>
+            <StackLayout Grid.Row="1" Grid.ColumnSpan="2">
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Kierunek Wiatru: NE</Label>
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Prędkość wiatru: 10 km/h</Label>
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Ilość opadów: 0mm</Label>
+            </StackLayout>
+        </Grid>
     </StackLayout>
 
 </ContentPage>

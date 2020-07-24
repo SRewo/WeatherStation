@@ -1,11 +1,20 @@
-﻿using Prism;
+﻿using System;
+using System.Diagnostics;
+using Prism;
 using Prism.Ioc;
+using Prism.Unity;
+using RestSharp;
+using Unity.Injection;
 using WeatherStation.App.ViewModels;
+using WeatherStation.App.Views;
+using WeatherStation.Library;
+using WeatherStation.Library.Interfaces;
+using WeatherStation.Library.Repositories;
 using Xamarin.Forms;
 
 namespace WeatherStation.App
 {
-    public partial class App 
+    public partial class App
     {
         public App() : this(null)
         {
@@ -26,16 +35,25 @@ namespace WeatherStation.App
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterForNavigation<NavigationPage>();
+            var accuRestClient = new RestClient("http://dataservice.accuweather.com/");
+            var dateProvider = new DateProvider();
+            containerRegistry.Register<IDateProvider, DateProvider>();
+            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode("", "", dateProvider, accuRestClient));
+
+
             containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
-            
+            containerRegistry.RegisterForNavigation<NavigationPage>();
+            containerRegistry.RegisterForNavigation<DetailPage>();
         }
 
         protected override async void OnInitialized()
         {
             InitializeComponent();
 
-           await  NavigationService.NavigateAsync("NavigationPage/MainPage");
+            var result = await NavigationService.NavigateAsync("DetailPage/NavigationPage/MainPage");
+            if (result.Success) return;
+            Console.WriteLine(result.Exception);
+            Debugger.Break();
         }
 
         protected override void OnResume()

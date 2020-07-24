@@ -33,7 +33,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         {
             Assert.ThrowsAny<NullReferenceException>(() =>
             {
-                var model = new MainPageViewModel(null, null, null, null);
+                var model = new MainPageViewModel(null, null);
             });
 
         }
