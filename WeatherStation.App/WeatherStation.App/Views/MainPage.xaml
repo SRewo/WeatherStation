@@ -4,10 +4,11 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mvvm="http://prismlibrary.com"
+             xmlns:viewModels="clr-namespace:WeatherStation.App.ViewModels;assembly=WeatherStation.App"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPage"
              mvvm:ViewModelLocator.AutowireViewModel="True"   
-             Title="Ćwiklice">
+             Title="Ćwiklice" x:DataType="viewModels:MainPageViewModel">
 
     <StackLayout>
         <Grid Margin="5,5,5,5">
@@ -21,16 +22,19 @@
             </Grid.ColumnDefinitions>
             <Image Source="https://image.flaticon.com/icons/svg/3093/3093303.svg"/>
             <StackLayout Grid.Row="0" Grid.Column="1">
-                <Label FontFamily="Roboto" FontSize="18" TextColor="black">12:40 Poniedziałek</Label>
-                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">Słonecznie</Label>
-                <Label FontSize="32" FontFamily="Roboto" TextColor="Black">14° C | 15° C</Label>
-                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">1024 hPa</Label>   
-                <Label FontSize="20" FontFamily="Roboto" TextColor="Black">Wilgotność: 40%</Label>
+                <Label FontFamily="Roboto" FontSize="18" TextColor="black" Text="{Binding Path= WeatherData.Date, StringFormat='{}{0:HH:mm dddd}'}"></Label>
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.WeatherDescription}"></Label>
+                <StackLayout Orientation="Horizontal">
+                    <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path=WeatherData.Temperature, StringFormat='{}{0}° C | '} "></Label>
+                    <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.TemperatureApparent, StringFormat='{}{0}° C'}"></Label>
+                </StackLayout>
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Pressure, StringFormat='{}{0} hPa'}"></Label>   
+                <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Humidity, StringFormat='Wilgotność: {0}%'}"></Label>
             </StackLayout>
-            <StackLayout Grid.Row="1" Grid.ColumnSpan="2">
-                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Kierunek Wiatru: NE</Label>
-                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Prędkość wiatru: 10 km/h</Label>
-                <Label FontFamily="Roboto" FontSize="20" TextColor="Black">Ilość opadów: 0mm</Label>
+            <StackLayout Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0">
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path= WeatherData.WindDirection, StringFormat='KierunekWiatru: {0}'}"></Label>
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path=WeatherData.WindSpeed, StringFormat='Prędkość wiatru {0} km/h'}"></Label>
+                <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path=WeatherData.PrecipitationSummary, StringFormat='Ilość opadów: {0} mm'}"></Label>
             </StackLayout>
         </Grid>
     </StackLayout>

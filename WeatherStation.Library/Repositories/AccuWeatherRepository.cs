@@ -31,7 +31,7 @@ namespace WeatherStation.Library.Repositories
         private IRestClient _client;
 
         public string CityCode { get; set; }
-        public string Language { get; set; }
+        public string Language { get; set; } = "pl-PL";
 
         private AccuWeatherRepository(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
         {
@@ -56,17 +56,18 @@ namespace WeatherStation.Library.Repositories
         public async Task<WeatherData> GetCurrentWeather()
         {
 
-            if (CityCode == string.Empty)
-                CityCode = await GetCityCode();
+            //if (CityCode == string.Empty)
+              //  CityCode = await GetCityCode();
 
             var query = new RestRequest($"currentconditions/v1/{CityCode}", DataFormat.Json);
             query.AddParameter("apikey", _key);
             query.AddParameter("details", true);
             query.AddParameter("language", Language);
+
             var result = await _client.ExecuteAsync(query, CancellationToken.None);
 
             if (!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode.ToString());
+                throw new HttpRequestException(result.StatusCode + ": " + result.ErrorMessage);
 
             var converter = new ExpandoObjectConverter();
             dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
@@ -84,7 +85,8 @@ namespace WeatherStation.Library.Repositories
                 .SetPressure((int) o.Pressure.Metric.Value)
                 .SetPrecipitationSummary((float) o.PrecipitationSummary.Precipitation.Metric.Value)
                 .SetWeatherCode((int) o.WeatherIcon)
-                .SetWeatherDescription((string) o.WeatherText);
+                .SetWeatherDescription((string) o.WeatherText)
+                .SetDate(_dateProvider.GetActualDateTime());
 
             return builder.Build();
         }

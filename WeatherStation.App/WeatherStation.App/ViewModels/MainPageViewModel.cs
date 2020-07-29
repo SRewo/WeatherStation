@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using Xamarin.Forms.Internals;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -56,9 +59,9 @@ namespace WeatherStation.App.ViewModels
         {
         }
 
-        public void OnNavigatedTo(INavigationParameters parameters)
+        public async void OnNavigatedTo(INavigationParameters parameters)
         {
-            GetData();
+            await GetData();
         }
 
         public async Task GetData()
@@ -66,12 +69,12 @@ namespace WeatherStation.App.ViewModels
             if (WeatherData == null || _dateProvider.GetActualDateTime() - WeatherData.Date > TimeSpan.FromMinutes(30))
             {
                 WeatherData = await _repository.GetCurrentWeather();
-                WeatherHourlyData = ContainsHourlyForecasts
-                    ? await _repository.HourlyRepository.GetHourlyForecast()
-                    : new List<WeatherData>();
-                WeatherDailyData = ContainsDailyForecasts
-                    ? await _repository.DailyRepository.GetDailyForecast()
-                    : new List<WeatherData>();
+                //WeatherHourlyData = ContainsHourlyForecasts
+                  //  ? await _repository.HourlyRepository.GetHourlyForecast()
+                  //  : new List<WeatherData>();
+                //WeatherDailyData = ContainsDailyForecasts
+                 //   ? await _repository.DailyRepository.GetDailyForecast()
+                 //   : new List<WeatherData>();
             }
         }
     }

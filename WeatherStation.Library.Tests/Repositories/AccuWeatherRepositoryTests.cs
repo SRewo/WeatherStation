@@ -33,6 +33,7 @@ namespace WeatherStation.Library.Tests.Repositories
 
             Assert.NotNull(weather);
             Assert.Equal(63, weather.Humidity);
+            Assert.Equal(new DateTime(2020,01,01), weather.Date);
         }
 
         [Fact]

@@ -35,11 +35,10 @@ namespace WeatherStation.App
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            var accuRestClient = new RestClient("http://dataservice.accuweather.com/");
+            var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             var dateProvider = new DateProvider();
             containerRegistry.Register<IDateProvider, DateProvider>();
-            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode("", "", dateProvider, accuRestClient));
-
+            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode("", "1411530", dateProvider, accuRestClient));
 
             containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
