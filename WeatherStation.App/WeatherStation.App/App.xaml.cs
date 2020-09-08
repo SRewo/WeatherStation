@@ -38,7 +38,7 @@ namespace WeatherStation.App
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             var dateProvider = new DateProvider();
             containerRegistry.Register<IDateProvider, DateProvider>();
-            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode("", "1411530", dateProvider, accuRestClient));
+            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode(AppApiKeys.AccuWeatherApiKey, "1411530", dateProvider, accuRestClient));
 
             containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
