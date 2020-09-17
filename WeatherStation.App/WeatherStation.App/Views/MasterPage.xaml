@@ -3,23 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:prism="http://prismlibrary.com"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.Views.MasterPage"
-             Title="WeatherStation">
+             Title="WeatherStation"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             >
   <StackLayout>
-    <ListView x:Name="MenuItemsListView"
+    <ListView
               SeparatorVisibility="None"
               HasUnevenRows="true"
-              ItemsSource="{Binding MenuItems}">
-      <d:ListView.ItemsSource>
-          <x:Array Type="{x:Type x:String}">
-              <x:String>Page 1</x:String>
-              <x:String>Page 2</x:String>
-              <x:String>Page 3</x:String>
-              <x:String>Page 4</x:String>
-              <x:String>Page 5</x:String>
-          </x:Array>
-      </d:ListView.ItemsSource>
+              ItemsSource="{Binding Path=MenuItems,Mode=OneWay}"
+              SelectedItem="{Binding SelectedItem}">
+        <ListView.Behaviors>
+            <prism:EventToCommandBehavior EventName="ItemTapped" Command="{Binding OpenViewCommand}"/>
+        </ListView.Behaviors>
       <ListView.Header>
         <Grid BackgroundColor="#1E2A61">
           <Grid.ColumnDefinitions>
@@ -49,9 +47,9 @@
         <DataTemplate>
           <ViewCell>
             <StackLayout Padding="15,10" HorizontalOptions="FillAndExpand">
-              <Label VerticalOptions="FillAndExpand" 
-                    VerticalTextAlignment="Center" 
-                    Text="{Binding Title}" 
+              <Label VerticalOptions="FillAndExpand"
+                    VerticalTextAlignment="Center"
+                    Text="{Binding Title}"
                     d:Text="{Binding .}"
                     FontSize="24"/>
             </StackLayout>

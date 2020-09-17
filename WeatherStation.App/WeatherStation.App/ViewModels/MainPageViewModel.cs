@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Prism.Commands;
+using Prism.Common;
 using Prism.Mvvm;
 using Prism.Navigation;
 using WeatherStation.Library;
@@ -15,7 +16,7 @@ namespace WeatherStation.App.ViewModels
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
         private readonly IDateProvider _dateProvider;
-        private readonly IWeatherRepository _repository;
+        private IWeatherRepository _repository;
 
 
         private IEnumerable<WeatherData> _weatherDailyData;
@@ -24,12 +25,9 @@ namespace WeatherStation.App.ViewModels
 
         private IEnumerable<WeatherData> _weatherHourlyData;
 
-        public MainPageViewModel(IDateProvider dateProvider, IWeatherRepository repository)
+        public MainPageViewModel(IDateProvider dateProvider)
         {
-            ContainsDailyForecasts = repository.DailyRepository != null;
-            ContainsHourlyForecasts = repository.DailyRepository != null;
             _dateProvider = dateProvider;
-            _repository = repository;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
         }
 
@@ -61,6 +59,13 @@ namespace WeatherStation.App.ViewModels
 
         public async void OnNavigatedTo(INavigationParameters parameters)
         {
+            _repository = (IWeatherRepository) parameters["repository"];
+
+            if (_repository == null)
+                return;
+
+            ContainsDailyForecasts = _repository.DailyRepository != null;
+            ContainsHourlyForecasts = _repository.HourlyRepository != null;
             await GetData();
         }
 

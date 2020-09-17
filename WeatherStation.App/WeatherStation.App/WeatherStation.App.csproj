@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,15 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Prism.Core" Version="8.0.0.1740-pre" />
-    <PackageReference Include="Prism.Forms" Version="8.0.0.1740-pre" />
-    <PackageReference Include="Prism.Unity.Forms" Version="8.0.0.1740-pre" />
-    <PackageReference Include="Xamarin.Forms" Version="4.8.0.1187-pre2" />
+    <PackageReference Include="dotenv.net" Version="2.1.1" />
+    <PackageReference Include="Microcharts.Forms" Version="0.9.5.7" />
+    <PackageReference Include="Prism.Unity.Forms" Version="8.0.0.1850-pre" />
+    <PackageReference Include="Xamarin.Forms" Version="4.8.0.1364" />
     <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\WeatherStation.Library\WeatherStation.Library.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,5 +34,13 @@
     <EmbeddedResource Update="Views\MasterPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WeatherStation.Library\WeatherStation.Library.csproj" />
   </ItemGroup>
 </Project>

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Prism;
 using Prism.Ioc;
 using Prism.Unity;
 using RestSharp;
-using Unity.Injection;
+using Unity;
 using WeatherStation.App.ViewModels;
 using WeatherStation.App.Views;
 using WeatherStation.Library;
@@ -37,8 +39,9 @@ namespace WeatherStation.App
         {
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             var dateProvider = new DateProvider();
+            containerRegistry.GetContainer().AddNewExtension<Diagnostic>();
             containerRegistry.Register<IDateProvider, DateProvider>();
-            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode(AppApiKeys.AccuWeatherApiKey, "1411530", dateProvider, accuRestClient));
+            containerRegistry.RegisterSingleton(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode(AppApiKeys.AccuWeatherApiKey, "1411530", dateProvider, accuRestClient));
 
             containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
