@@ -13,10 +13,10 @@ using Xamarin.Forms.Xaml;
 namespace WeatherStation.App.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class MasterPage : ContentPage
+    public partial class MasterPageView : ContentPage
     {
 
-        public MasterPage()
+        public MasterPageView()
         {
             InitializeComponent();
         }

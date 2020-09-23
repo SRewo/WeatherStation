@@ -4,7 +4,7 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             x:Class="WeatherStation.App.Views.DetailPage"
+             x:Class="WeatherStation.App.Views.DetailPageView"
              xmlns:pages="clr-namespace:WeatherStation.App.Views"
              xmlns:app="clr-namespace:WeatherStation.App;assembly=WeatherStation.App">
   <MasterDetailPage.Master>
@@ -13,7 +13,7 @@
   <MasterDetailPage.Detail>
     <NavigationPage>
       <x:Arguments>
-        <app:MainPage/>
+        <app:MainView/>
       </x:Arguments>
     </NavigationPage>
   </MasterDetailPage.Detail>

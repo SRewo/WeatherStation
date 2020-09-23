@@ -47,7 +47,7 @@ namespace WeatherStation.App.ViewModels
                 var item = new MenuItem
                 {
                     Id = i++,
-                    TargetView = nameof(MainPage),
+                    TargetView = nameof(MainPageView),
                     Title = r.RepositoryName,
                     Parameters = new NavigationParameters()
                 };

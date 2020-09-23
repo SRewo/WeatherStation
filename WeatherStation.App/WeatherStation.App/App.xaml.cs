@@ -43,9 +43,9 @@ namespace WeatherStation.App
             containerRegistry.Register<IDateProvider, DateProvider>();
             containerRegistry.RegisterSingleton(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode(AppApiKeys.AccuWeatherApiKey, "1411530", dateProvider, accuRestClient));
 
-            containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
+            containerRegistry.RegisterForNavigation<MainPageView, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
-            containerRegistry.RegisterForNavigation<DetailPage>();
+            containerRegistry.RegisterForNavigation<DetailPageView>();
         }
 
         protected override async void OnInitialized()

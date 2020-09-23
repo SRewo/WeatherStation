@@ -6,7 +6,7 @@
              xmlns:mvvm="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:WeatherStation.App.ViewModels;assembly=WeatherStation.App"
              mc:Ignorable="d"
-             x:Class="WeatherStation.App.MainPage"
+             x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
              Title="Ćwiklice" x:DataType="viewModels:MainPageViewModel">
 
