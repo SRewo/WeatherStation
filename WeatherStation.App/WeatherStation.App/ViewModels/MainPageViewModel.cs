@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Prism.Commands;
-using Prism.Common;
 using Prism.Mvvm;
 using Prism.Navigation;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
-using Xamarin.Forms.Internals;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -60,27 +56,38 @@ namespace WeatherStation.App.ViewModels
         public async void OnNavigatedTo(INavigationParameters parameters)
         {
             _repository = (IWeatherRepository) parameters["repository"];
-
-            if (_repository == null)
-                return;
-
-            ContainsDailyForecasts = _repository.DailyRepository != null;
-            ContainsHourlyForecasts = _repository.HourlyRepository != null;
+            await CheckIfRepositoryContainsDailyAndHourlyForecasts();
             await GetData();
         }
 
         public async Task GetData()
         {
-            if (WeatherData == null || _dateProvider.GetActualDateTime() - WeatherData.Date > TimeSpan.FromMinutes(30))
-            {
-                WeatherData = await _repository.GetCurrentWeather();
-                //WeatherHourlyData = ContainsHourlyForecasts
-                  //  ? await _repository.HourlyRepository.GetHourlyForecast()
-                  //  : new List<WeatherData>();
-                //WeatherDailyData = ContainsDailyForecasts
-                 //   ? await _repository.DailyRepository.GetDailyForecast()
-                 //   : new List<WeatherData>();
-            }
+            if (!IsWeatherDataCurrent())
+                await DownloadWeatherDataFromRepository();
+        }
+
+        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        {
+            ContainsDailyForecasts = _repository.DailyRepository != null;
+            ContainsHourlyForecasts = _repository.HourlyRepository != null;
+            return Task.CompletedTask;
+        }
+
+        public async Task DownloadWeatherDataFromRepository()
+        {
+            WeatherData = await _repository.GetCurrentWeather();
+            //WeatherHourlyData = ContainsHourlyForecasts
+                //  ? await _repository.HourlyRepository.GetHourlyForecast()
+                //  : new List<WeatherData>();
+            //WeatherDailyData = ContainsDailyForecasts
+                //   ? await _repository.DailyRepository.GetDailyForecast()
+                //   : new List<WeatherData>();
+        }
+
+        public bool IsWeatherDataCurrent()
+        {
+            return WeatherData != null &&
+                   _dateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
         }
     }
 }
