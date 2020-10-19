@@ -8,12 +8,12 @@
              xmlns:pages="clr-namespace:WeatherStation.App.Views"
              xmlns:app="clr-namespace:WeatherStation.App;assembly=WeatherStation.App">
   <MasterDetailPage.Master>
-    <pages:MasterPage x:Name="MasterPage" />
+    <pages:MasterPageView x:Name="MasterPage" />
   </MasterDetailPage.Master>
   <MasterDetailPage.Detail>
     <NavigationPage>
       <x:Arguments>
-        <app:MainView/>
+        <app:MainPageView/>
       </x:Arguments>
     </NavigationPage>
   </MasterDetailPage.Detail>

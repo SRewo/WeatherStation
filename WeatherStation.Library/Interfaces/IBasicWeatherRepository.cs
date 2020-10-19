@@ -9,5 +9,7 @@ namespace WeatherStation.Library.Interfaces
         float Latitude { get; set; }
         float Longitude { get; set; }
         Task<WeatherData> GetCurrentWeather();
+        Task ChangeCity(float latitude, float longitude);
+        Task ChangeCity(string cityName);
     }
 }

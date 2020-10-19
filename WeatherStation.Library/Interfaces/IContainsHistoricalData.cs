@@ -8,7 +8,6 @@ namespace WeatherStation.Library.Interfaces
     {
         int MaxHistoricalHorizon { get; }
         TimeSpan DifferenceBetweenMeasurements { get; }
-        Task<IEnumerable<WeatherData>> GetHistoricalData(DateTime from);
-        Task<IEnumerable<WeatherData>> GetHistoricalData(DateTime from, DateTime to);
+        Task<IEnumerable<WeatherData>> GetHistoricalData();
     }
 }

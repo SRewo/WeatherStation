@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
 
@@ -16,66 +13,61 @@ namespace WeatherStation.Library.Repositories
 {
     public class AccuWeatherRepository : IWeatherRepository ,IContainsDailyForecast, IContainsHourlyForecast, IContainsHistoricalData
     {
-        public static AccuWeatherRepository CreateInstanceWithCityCode(string key, string cityCode, IDateProvider provider, IRestClient client)
-        {
-            return new AccuWeatherRepository(key, cityCode, provider, client);
-        }
-
-        public static AccuWeatherRepository CreateInstanceWithCoordinates(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
-        {
-            return new AccuWeatherRepository(key, latitude, longitude, provider, client);
-        }
-
-        private string _key;
-        private IDateProvider _dateProvider;
-        private IRestClient _client;
-
+        private readonly string _apiKey;
+        private readonly IDateProvider _dateProvider;
+        private readonly IRestClient _restClient;
         public string CityCode { get; set; }
         public string Language { get; set; } = "pl-PL";
-
-        private AccuWeatherRepository(string key, float latitude, float longitude, IDateProvider provider, IRestClient client)
-        {
-            _key = key;
-            Latitude = latitude;
-            Longitude = longitude;
-            _dateProvider = provider;
-            _client = client;
-        }
-
-        private AccuWeatherRepository(string key, string cityCode, IDateProvider provider, IRestClient client)
-        {
-            _key = key;
-            CityCode = cityCode;
-            _dateProvider = provider;
-            _client = client;
-        }
-
         public string RepositoryName { get; set; } = "AccuWeather";
         public float Latitude { get; set; }
         public float Longitude { get; set; }
+        public int MaxHistoricalHorizon { get; } = 24;
+        public TimeSpan DifferenceBetweenMeasurements { get; } = TimeSpan.FromHours(1);
+        public int DailyForecastHorizon { get; } = 5;
+        public IContainsDailyForecast DailyRepository => this;
+        public IContainsHistoricalData HistoricalRepository => this;
+        public IContainsHourlyForecast HourlyRepository => this;
+        public int HourlyForecastHorizon { get; } = 12;
+
+
+        public static AccuWeatherRepository FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient)
+        {
+            return new AccuWeatherRepository(key, cityCode, dateProvider, restClient);
+        }
+
+        public static AccuWeatherRepository FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient)
+        {
+            return new AccuWeatherRepository(key, cityLatitude, cityLongitude, dateProvider, restClient);
+        }
+
+        private AccuWeatherRepository(string apiKey, float latitude, float longitude, IDateProvider provider, IRestClient restClient)
+        {
+            _apiKey = apiKey;
+            Latitude = latitude;
+            Longitude = longitude;
+            _dateProvider = provider;
+            _restClient = restClient;
+        }
+
+        private AccuWeatherRepository(string apiKey, string cityCode, IDateProvider provider, IRestClient restClient)
+        {
+            _apiKey = apiKey;
+            CityCode = cityCode;
+            _dateProvider = provider;
+            _restClient = restClient;
+        }
+
         public async Task<WeatherData> GetCurrentWeather()
         {
+            await SetCityCodeIfEmpty();
+            var dynamicResult = GetDataFromApi($"currentconditions/v1/{CityCode}");
+            return BuildCurrentWeatherDataFromDynamicObject(dynamicResult);
+        }
 
-            //if (CityCode == string.Empty)
-              //  CityCode = await GetCityCode();
 
-            var query = new RestRequest($"currentconditions/v1/{CityCode}", DataFormat.Json);
-            query.AddParameter("apikey", _key);
-            query.AddParameter("details", true);
-            query.AddParameter("language", Language);
-
-            var result = await _client.ExecuteAsync(query, CancellationToken.None);
-
-            if (!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode + ": " + result.ErrorMessage);
-
-            var converter = new ExpandoObjectConverter();
-            dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
-
-            if(d == null)
-                throw new NullReferenceException();
-
-            var o = d[0];
+        private WeatherData BuildCurrentWeatherDataFromDynamicObject(dynamic dynamicResult)
+        {
+            var o = dynamicResult[0];
             var builder = new WeatherDataBuilder();
             builder.SetTemperature((float) o.Temperature.Metric.Value, TemperatureUnit.Celcius)
                 .SetApparentTemperature((float) o.RealFeelTemperature.Metric.Value, TemperatureUnit.Celcius)
@@ -87,213 +79,176 @@ namespace WeatherStation.Library.Repositories
                 .SetWeatherCode((int) o.WeatherIcon)
                 .SetWeatherDescription((string) o.WeatherText)
                 .SetDate(_dateProvider.GetActualDateTime());
-
             return builder.Build();
         }
 
-        public int DailyForecastHorizon { get; } = 5;
         public async Task<IEnumerable<WeatherData>> GetDailyForecast()
         {
-            if (CityCode == string.Empty)
-                CityCode = await GetCityCode();
-
-            var query = new RestRequest($"forecasts/v1/daily/5day/{CityCode}", DataFormat.Json);
-            query.AddParameter("apikey", _key);
-            query.AddParameter("details", true);
-            query.AddParameter("language", Language);
-            query.AddParameter("metric", true);
-            var result = await _client.ExecuteAsync(query, CancellationToken.None);
-
-            if (!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode.ToString());
-
-            var converter = new ExpandoObjectConverter();
-            dynamic d = JsonConvert.DeserializeObject<ExpandoObject>(result.Content, converter);
-
-            if(d == null)
-                throw new NullReferenceException();
-             
-            var list = new List<WeatherData>();
-    
-            foreach (var o in d.DailyForecasts)
-            {
-                var builder = new WeatherDataBuilder();
-
-                builder.SetDate((DateTime) o.Date)
-                    .SetMinTemperature((float) o.Temperature.Minimum.Value, TemperatureUnit.Celcius)
-                    .SetMaxTemperature((float) o.Temperature.Maximum.Value, TemperatureUnit.Celcius)
-                    .SetWindDirection((int) o.Day.Wind.Direction.Degrees)
-                    .SetWindSpeed((float) o.Day.Wind.Speed.Value)
-                    .SetChanceOfRain((int) o.Day.PrecipitationProbability)
-                    .SetPrecipitationSummary((float) o.Day.TotalLiquid.Value)
-                    .SetWeatherCode((int) o.Day.Icon)
-                    .SetWeatherDescription((string) o.Day.IconPhrase);
-
-                list.Add(builder.Build());
-            }
-
-            return list;
-
+            await SetCityCodeIfEmpty();
+            var dynamicResult = GetDataFromApi($"forecasts/v1/daily/5day/{CityCode}");
+            return CreateDailyForecasts(dynamicResult);
         }
 
-        public int HourlyForecastHorizon { get; } = 12;
+        private static IEnumerable<WeatherData> CreateDailyForecasts(dynamic dynamicResult)
+        {
+            var list = new List<WeatherData>();
+            foreach (var o in dynamicResult.DailyForecasts)
+                list.Add(BuildDailyForecastDataFromDynamicObject(o));
+            return list;
+        }
+
+        private static WeatherData BuildDailyForecastDataFromDynamicObject(dynamic o)
+        {
+            var builder = new WeatherDataBuilder();
+            builder.SetDate((DateTime) o.Date)
+                .SetMinTemperature((float) o.Temperature.Minimum.Value, TemperatureUnit.Celcius)
+                .SetMaxTemperature((float) o.Temperature.Maximum.Value, TemperatureUnit.Celcius)
+                .SetWindDirection((int) o.Day.Wind.Direction.Degrees)
+                .SetWindSpeed((float) o.Day.Wind.Speed.Value)
+                .SetChanceOfRain((int) o.Day.PrecipitationProbability)
+                .SetPrecipitationSummary((float) o.Day.TotalLiquid.Value)
+                .SetWeatherCode((int) o.Day.Icon)
+                .SetWeatherDescription((string) o.Day.IconPhrase);
+            return builder.Build();
+        }
+
+
         public async Task<IEnumerable<WeatherData>> GetHourlyForecast()
         {
-             if (CityCode == string.Empty)
-                CityCode = await GetCityCode();
-
-             var query = new RestRequest($"forecasts/v1/hourly/12hour/{CityCode}", DataFormat.Json);
-             query.AddParameter("apikey", _key);
-             query.AddParameter("details", true);
-             query.AddParameter("language", Language);
-             query.AddParameter("metric", true);
-             var result = await _client.ExecuteAsync(query, CancellationToken.None);
-
-             if (!result.IsSuccessful)
-                 throw new HttpRequestException(result.StatusCode.ToString());
-
-             var converter = new ExpandoObjectConverter();
-             dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
-
-             if(d == null)
-                 throw new NullReferenceException("Provided json string is empty");
-             
-             var list = new List<WeatherData>();
-
-             foreach (var o in d)
-             {
-                var builder = new WeatherDataBuilder();
-
-                builder.SetDate((DateTime) o.DateTime)
-                    .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
-                    .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
-                    .SetHumidity((int) o.RelativeHumidity)
-                    .SetWindDirection((int) o.Wind.Direction.Degrees)
-                    .SetWindSpeed((float) o.Wind.Speed.Value)
-                    .SetChanceOfRain((int) o.PrecipitationProbability)
-                    .SetPrecipitationSummary((float) o.TotalLiquid.Value)
-                    .SetWeatherCode((int) o.WeatherIcon)
-                    .SetWeatherDescription((string) o.IconPhrase);
-
-                 list.Add(builder.Build());
-             }
-
-             return list;
+            await SetCityCodeIfEmpty();
+            var dynamicResult = await GetDataFromApi($"forecasts/v1/hourly/12hour/{CityCode}");
+            return CreateHourlyForecasts(dynamicResult);
         }
 
-        public int MaxHistoricalHorizon { get; } = 24;
-        public TimeSpan DifferenceBetweenMeasurements { get; } = TimeSpan.FromHours(1);
-        public async Task<IEnumerable<WeatherData>> GetHistoricalData(DateTime @from)
+        private async Task<dynamic> GetDataFromApi(string resourcePath)
         {
-             if (CityCode == string.Empty)
-                CityCode = await GetCityCode();
-
-             var query = new RestRequest($"forecasts/v1/{CityCode}/historical/24", DataFormat.Json);
-             query.AddParameter("apikey", _key);
-             query.AddParameter("details", true);
-             query.AddParameter("language", Language);
-             query.AddParameter("metric", true);
-             var result = await _client.ExecuteAsync(query, CancellationToken.None);
-
-             if (!result.IsSuccessful)
-                 throw new HttpRequestException(result.StatusCode.ToString());
-
-             var converter = new ExpandoObjectConverter();
-             dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
-
-             if(d == null)
-                 throw new NullReferenceException();
-             
-             var list = new List<WeatherData>();
-
-             foreach (var o in d)
-             {
-                var builder = new WeatherDataBuilder();
-
-                builder.SetDate((DateTime) o.DateTime)
-                    .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
-                    .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
-                    .SetHumidity((int) o.RelativeHumidity)
-                    .SetWindDirection((int) o.Wind.Direction.Degrees)
-                    .SetWindSpeed((float) o.Wind.Speed.Value)
-                    .SetChanceOfRain((int) o.PrecipitationProbability)
-                    .SetPrecipitationSummary((float) o.TotalLiquid.Value)
-                    .SetWeatherCode((int) o.WeatherIcon)
-                    .SetWeatherDescription((string) o.IconPhrase);
-
-                 list.Add(builder.Build());
-             }
-
-             var filteredList = list.Where(x => x.Date > from);
-
-             return filteredList;
+            var query = CreateRestRequest(resourcePath);
+            var result = await ExecuteRestRequest(query);
+            return ConvertRestResultToDynamicObject(result);
         }
 
-        public async Task<IEnumerable<WeatherData>> GetHistoricalData(DateTime @from, DateTime to)
+        private static IEnumerable<WeatherData> CreateHourlyForecasts(dynamic dynamicResult)
         {
-            if (CityCode == string.Empty)
-                CityCode = await GetCityCode();
+            var list = new List<WeatherData>();
 
-            var query = new RestRequest($"forecasts/v1/{CityCode}/historical/24", DataFormat.Json);
-            query.AddParameter("apikey", _key);
-            query.AddParameter("details", true);
-            query.AddParameter("language", Language);
-            query.AddParameter("metric", true);
-            var result = await _client.ExecuteAsync(query, CancellationToken.None);
+            foreach (var o in dynamicResult)
+                list.Add(BuildHourlyForecastDataFromDynamicObject(o));
 
-            if (!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode.ToString());
+            return list;
+        }
 
+        private static WeatherData BuildHourlyForecastDataFromDynamicObject(dynamic o)
+        {
+            var builder = new WeatherDataBuilder();
+
+            builder.SetDate((DateTime) o.DateTime)
+                .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
+                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
+                .SetHumidity((int) o.RelativeHumidity)
+                .SetWindDirection((int) o.Wind.Direction.Degrees)
+                .SetWindSpeed((float) o.Wind.Speed.Value)
+                .SetChanceOfRain((int) o.PrecipitationProbability)
+                .SetPrecipitationSummary((float) o.TotalLiquid.Value)
+                .SetWeatherCode((int) o.WeatherIcon)
+                .SetWeatherDescription((string) o.IconPhrase);
+            return builder.Build();
+        }
+
+        public async Task<IEnumerable<WeatherData>> GetHistoricalData()
+        {
+             await SetCityCodeIfEmpty();
+             var dynamicResult = await GetDataFromApi($"forecasts/v1/{CityCode}/historical/24");
+             return CreateHistoricalForecasts(dynamicResult);
+        }
+
+        private static IEnumerable<WeatherData> CreateHistoricalForecasts(dynamic dynamicResult)
+        {
+            var list = new List<WeatherData>();
+            foreach (var o in dynamicResult)
+                list.Add(BuildHistoricalForecastFromDynamicObject(o));
+            return list;
+        }
+
+        private static WeatherData BuildHistoricalForecastFromDynamicObject(dynamic o)
+        {
+            var builder = new WeatherDataBuilder();
+
+            builder.SetDate((DateTime) o.DateTime)
+                .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
+                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
+                .SetHumidity((int) o.RelativeHumidity)
+                .SetWindDirection((int) o.Wind.Direction.Degrees)
+                .SetWindSpeed((float) o.Wind.Speed.Value)
+                .SetChanceOfRain((int) o.PrecipitationProbability)
+                .SetPrecipitationSummary((float) o.TotalLiquid.Value)
+                .SetWeatherCode((int) o.WeatherIcon)
+                .SetWeatherDescription((string) o.IconPhrase);
+            return builder.Build();
+        }
+
+        private static dynamic ConvertRestResultToDynamicObject(IRestResponse result)
+        {
             var converter = new ExpandoObjectConverter();
             dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
 
-            if(d == null)
-                throw new NullReferenceException();
-             
-            var list = new List<WeatherData>();
-
-            foreach (var o in d)
-            {
-                var builder = new WeatherDataBuilder();
-
-                builder.SetDate((DateTime) o.DateTime)
-                    .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
-                    .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
-                    .SetHumidity((int) o.RelativeHumidity)
-                    .SetWindDirection((int) o.Wind.Direction.Degrees)
-                    .SetWindSpeed((float) o.Wind.Speed.Value)
-                    .SetChanceOfRain((int) o.PrecipitationProbability)
-                    .SetPrecipitationSummary((float) o.TotalLiquid.Value)
-                    .SetWeatherCode((int) o.WeatherIcon)
-                    .SetWeatherDescription((string) o.IconPhrase);
-
-                list.Add(builder.Build());
-            }
-
-            var filteredList = list.Where(x => x.Date > from && x.Date < to);
-
-            return filteredList;
+            if (d == null)
+                throw new NullReferenceException("Content of the rest result was null.");
+            return d;
         }
 
-        public async Task<string> GetCityCode()
+        private async Task<IRestResponse> ExecuteRestRequest(IRestRequest query)
+        {
+            var result = await _restClient.ExecuteAsync(query, CancellationToken.None);
+
+            if (!result.IsSuccessful)
+                throw new HttpRequestException(result.StatusCode + ": " + result.ErrorMessage);
+            return result;
+        }
+
+        private IRestRequest CreateRestRequest(string resourcePath)
+        {
+            var query = new RestRequest(resourcePath, DataFormat.Json);
+            AddDefaultParameters(query);
+            return query;
+        }
+
+        private void AddDefaultParameters(IRestRequest query)
+        {
+            query.AddParameter("apikey", _apiKey);
+            query.AddParameter("details", true);
+            query.AddParameter("language", Language);
+            query.AddParameter("metric", true);
+        }
+
+        private async Task SetCityCodeIfEmpty()
+        {
+            if (CityCode == string.Empty)
+                await ChangeCity(Latitude, Longitude);
+        }
+
+        public async Task ChangeCity(float latitude, float longitude)
         {
             var query = new RestRequest("locations/v1/cities/geoposition/search");
-            query.AddParameter("apikey", _key);
-            query.AddParameter("q", $"{Latitude}, {Longitude}");
-
-            var result = await _client.ExecuteAsync(query, CancellationToken.None);
-
-            if(!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode + " " + result.ErrorMessage);
-
-            var converter = new ExpandoObjectConverter();
-            dynamic d = JsonConvert.DeserializeObject<ExpandoObject>(result.Content, converter);
-
-            return d.Key;
+            query.AddParameter("apikey", _apiKey);
+            query.AddParameter("q", $"{latitude}, {longitude}");
+            var result = await ExecuteRestRequest(query);
+            CityCode = GetCityCodeFromRestResult(result);
         }
 
-        public IContainsDailyForecast DailyRepository => this;
-        public IContainsHistoricalData HistoricalRepository => this;
-        public IContainsHourlyForecast HourlyRepository => this;
+        public async Task ChangeCity(string cityName)
+        {
+            var query = new RestRequest("locations/v1/cities/search");
+            query.AddParameter("apikey", _apiKey);
+            query.AddParameter("q", cityName);
+            var result = await ExecuteRestRequest(query);
+            CityCode = GetCityCodeFromRestResult(result);
+        }
+
+        private static string GetCityCodeFromRestResult(IRestResponse result)
+        {
+            var cityData = ConvertRestResultToDynamicObject(result);
+            return cityData.Key;
+        }
+
     }
 }

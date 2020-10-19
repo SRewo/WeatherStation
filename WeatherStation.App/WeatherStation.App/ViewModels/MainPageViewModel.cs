@@ -62,6 +62,18 @@ namespace WeatherStation.App.ViewModels
 
         public async Task GetData()
         {
+            try
+            {
+                await GetDataIfNotCurrent();
+            }
+            catch (Exception ex)
+            {
+               Console.WriteLine(ex.Message);
+            }
+        }
+
+        public async Task GetDataIfNotCurrent()
+        {
             if (!IsWeatherDataCurrent())
                 await DownloadWeatherDataFromRepository();
         }
@@ -86,8 +98,14 @@ namespace WeatherStation.App.ViewModels
 
         public bool IsWeatherDataCurrent()
         {
-            return WeatherData != null &&
-                   _dateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
+            try
+            {
+                return _dateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
