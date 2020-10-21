@@ -27,8 +27,8 @@
                         <Label FontFamily="Roboto" FontSize="18" TextColor="black" Text="{Binding Path= WeatherData.Date, StringFormat='{}{0:HH:mm dddd}'}"></Label>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.WeatherDescription}"></Label>
                         <StackLayout Orientation="Horizontal">
-                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path=WeatherData.Temperature, StringFormat='{}{0}° C | '} "></Label>
-                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.TemperatureApparent, StringFormat='{}{0}° C'}"></Label>
+                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path=WeatherData.Temperature, StringFormat='{}{0}| '} "></Label>
+                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.TemperatureApparent}"></Label>
                         </StackLayout>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Pressure, StringFormat='{}{0} hPa'}"></Label>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Humidity, StringFormat='Humidity: {0}%'}"></Label>

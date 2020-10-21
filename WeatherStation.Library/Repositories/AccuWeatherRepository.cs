@@ -69,8 +69,8 @@ namespace WeatherStation.Library.Repositories
         {
             var o = dynamicResult[0];
             var builder = new WeatherDataBuilder();
-            builder.SetTemperature((float) o.Temperature.Metric.Value, TemperatureUnit.Celcius)
-                .SetApparentTemperature((float) o.RealFeelTemperature.Metric.Value, TemperatureUnit.Celcius)
+            builder.SetTemperature((float) o.Temperature.Metric.Value, TemperatureScale.Celsius)
+                .SetApparentTemperature((float) o.RealFeelTemperature.Metric.Value, TemperatureScale.Celsius)
                 .SetHumidity((int) o.RelativeHumidity)
                 .SetWindDirection((int) o.Wind.Direction.Degrees)
                 .SetWindSpeed((float) o.Wind.Speed.Metric.Value)
@@ -101,8 +101,8 @@ namespace WeatherStation.Library.Repositories
         {
             var builder = new WeatherDataBuilder();
             builder.SetDate((DateTime) o.Date)
-                .SetMinTemperature((float) o.Temperature.Minimum.Value, TemperatureUnit.Celcius)
-                .SetMaxTemperature((float) o.Temperature.Maximum.Value, TemperatureUnit.Celcius)
+                .SetMinTemperature((float) o.Temperature.Minimum.Value, TemperatureScale.Celsius)
+                .SetMaxTemperature((float) o.Temperature.Maximum.Value, TemperatureScale.Celsius)
                 .SetWindDirection((int) o.Day.Wind.Direction.Degrees)
                 .SetWindSpeed((float) o.Day.Wind.Speed.Value)
                 .SetChanceOfRain((int) o.Day.PrecipitationProbability)
@@ -142,8 +142,8 @@ namespace WeatherStation.Library.Repositories
             var builder = new WeatherDataBuilder();
 
             builder.SetDate((DateTime) o.DateTime)
-                .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
-                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
+                .SetTemperature((float) o.Temperature.Value, TemperatureScale.Celsius)
+                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureScale.Celsius)
                 .SetHumidity((int) o.RelativeHumidity)
                 .SetWindDirection((int) o.Wind.Direction.Degrees)
                 .SetWindSpeed((float) o.Wind.Speed.Value)
@@ -174,8 +174,8 @@ namespace WeatherStation.Library.Repositories
             var builder = new WeatherDataBuilder();
 
             builder.SetDate((DateTime) o.DateTime)
-                .SetTemperature((float) o.Temperature.Value, TemperatureUnit.Celcius)
-                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureUnit.Celcius)
+                .SetTemperature((float) o.Temperature.Value, TemperatureScale.Celsius)
+                .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureScale.Celsius)
                 .SetHumidity((int) o.RelativeHumidity)
                 .SetWindDirection((int) o.Wind.Direction.Degrees)
                 .SetWindSpeed((float) o.Wind.Speed.Value)
