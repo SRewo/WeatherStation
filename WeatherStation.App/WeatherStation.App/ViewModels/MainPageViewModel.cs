@@ -11,7 +11,7 @@ namespace WeatherStation.App.ViewModels
 {
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
-        private readonly IDateProvider _dateProvider;
+        protected IDateProvider DateProvider;
         private IWeatherRepository _repository;
 
 
@@ -21,9 +21,14 @@ namespace WeatherStation.App.ViewModels
 
         private IEnumerable<WeatherData> _weatherHourlyData;
 
+        protected MainPageViewModel()
+        {
+
+        }
+
         public MainPageViewModel(IDateProvider dateProvider)
         {
-            _dateProvider = dateProvider;
+            DateProvider = dateProvider;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
         }
 
@@ -55,12 +60,23 @@ namespace WeatherStation.App.ViewModels
 
         public async void OnNavigatedTo(INavigationParameters parameters)
         {
-            _repository = (IWeatherRepository) parameters["repository"];
+            await PerformRequiredTasks(parameters);
+        }
+
+        protected async Task PerformRequiredTasks(INavigationParameters parameters)
+        {
+            await GetVariablesFromParameters(parameters);
             await CheckIfRepositoryContainsDailyAndHourlyForecasts();
             await GetData();
         }
 
-        public async Task GetData()
+        private Task GetVariablesFromParameters(INavigationParameters parameters)
+        {
+            _repository = (IWeatherRepository) parameters["repository"];
+            return Task.CompletedTask;
+        }
+
+        private async Task GetData()
         {
             try
             {
@@ -72,7 +88,7 @@ namespace WeatherStation.App.ViewModels
             }
         }
 
-        public async Task GetDataIfNotCurrent()
+        private async Task GetDataIfNotCurrent()
         {
             if (!IsWeatherDataCurrent())
                 await DownloadWeatherDataFromRepository();
@@ -85,7 +101,7 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        public async Task DownloadWeatherDataFromRepository()
+        private async Task DownloadWeatherDataFromRepository()
         {
             WeatherData = await _repository.GetCurrentWeather();
             //WeatherHourlyData = ContainsHourlyForecasts
@@ -96,11 +112,11 @@ namespace WeatherStation.App.ViewModels
                 //   : new List<WeatherData>();
         }
 
-        public bool IsWeatherDataCurrent()
+        private bool IsWeatherDataCurrent()
         {
             try
             {
-                return _dateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
+                return DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
             }
             catch
             {
