@@ -21,13 +21,9 @@ namespace WeatherStation.Library.Repositories
         public string RepositoryName { get; set; } = "AccuWeather";
         public float Latitude { get; set; }
         public float Longitude { get; set; }
-        public int MaxHistoricalHorizon { get; } = 24;
-        public TimeSpan DifferenceBetweenMeasurements { get; } = TimeSpan.FromHours(1);
-        public int DailyForecastHorizon { get; } = 5;
         public IContainsDailyForecast DailyRepository => this;
         public IContainsHistoricalData HistoricalRepository => this;
         public IContainsHourlyForecast HourlyRepository => this;
-        public int HourlyForecastHorizon { get; } = 12;
 
 
         public static AccuWeatherRepository FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient)
@@ -60,7 +56,7 @@ namespace WeatherStation.Library.Repositories
         public async Task<WeatherData> GetCurrentWeather()
         {
             await SetCityCodeIfEmpty();
-            var dynamicResult = GetDataFromApi($"currentconditions/v1/{CityCode}");
+            var dynamicResult = await GetDataFromApi($"currentconditions/v1/{CityCode}");
             return BuildCurrentWeatherDataFromDynamicObject(dynamicResult);
         }
 
@@ -247,7 +243,7 @@ namespace WeatherStation.Library.Repositories
         private static string GetCityCodeFromRestResult(IRestResponse result)
         {
             var cityData = ConvertRestResultToDynamicObject(result);
-            return cityData.Key;
+            return cityData[0].Key;
         }
 
     }

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
-using Autofac.Extras.Moq;
 using Moq;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
@@ -14,72 +13,121 @@ namespace WeatherStation.Library.Tests.Repositories
 {
     public class AccuWeatherRepositoryTests
     {
+        private static string _cityCode = "1411530";
+
         [Fact]
         public async Task GetCurrentWeather_WorksProperly()
         {
-            var mock = AutoMock.GetLoose();
-            var response = new Mock<IRestResponse>();
-            using var r = new StreamReader("Repositories/TestResponses/AccuWeatherCurrentWeather.json");
-            var json = await r.ReadToEndAsync();
-            response.Setup(x => x.Content).Returns(json);
-            response.Setup(x => x.IsSuccessful).Returns(true);
-            mock.Mock<IRestClient>().Setup(x => x.ExecuteAsync(It.IsAny<RestRequest>(), CancellationToken.None))
-                .ReturnsAsync(response.Object);
-            mock.Mock<IDateProvider>().Setup(x => x.GetActualDateTime()).Returns(new DateTime(2020, 01, 01));
-            var repo = AccuWeatherRepository.CreateInstanceWithCityCode("", "1234",
-                mock.Container.Resolve<IDateProvider>(), mock.Container.Resolve<IRestClient>());
+            var clientMock = new Mock<IRestClient>();
+            await SetupWeatherRestResponse(clientMock);
+            var dateProviderMock = CreateDateProviderMock();
+            var repository = AccuWeatherRepository.FromCityCode("", _cityCode, dateProviderMock.Object, clientMock.Object);
 
-            var weather = await repo.GetCurrentWeather();
+            var weather = await repository.GetCurrentWeather();
 
             Assert.NotNull(weather);
-            Assert.Equal(63, weather.Humidity);
-            Assert.Equal(new DateTime(2020,01,01), weather.Date);
+        }
+
+        private static Mock<IDateProvider> CreateDateProviderMock()
+        {
+            var dateProviderMock = new Mock<IDateProvider>();
+            dateProviderMock.Setup(x => x.GetActualDateTime()).Returns(new DateTime(2020, 01, 01));
+            return dateProviderMock;
+        }
+
+        private static async Task<Mock<IRestResponse>> SetupWeatherRestResponse(Mock<IRestClient> clientMock)
+        {
+            var response = await CreateCurrentWeatherRestResponseMock();
+            AddCurrentWeatherResponseToRestClientMock(clientMock, response.Object);
+            return response;
+        }
+
+        private static void AddCurrentWeatherResponseToRestClientMock(Mock<IRestClient> clientMock,IRestResponse response)
+        {
+           clientMock.Setup(x => x.ExecuteAsync(
+                    It.Is<RestRequest>(z => z.Resource == $"currentconditions/v1/{_cityCode}"), CancellationToken.None))
+                .ReturnsAsync(response);
+        }
+
+
+        private static async Task<Mock<IRestResponse>> CreateCurrentWeatherRestResponseMock()
+        {
+
+            var response = new Mock<IRestResponse>();
+            var json = await LoadJsonResponse("Repositories/TestResponses/AccuWeatherCurrentWeather.json");
+            response.Setup(x => x.Content).Returns(json);
+            response.Setup(x => x.IsSuccessful).Returns(true);
+            return response;
+        }
+
+        private static async Task<string> LoadJsonResponse(string path)
+        {
+            using var streamReader = new StreamReader(path);
+            var result = await streamReader.ReadToEndAsync();
+            return result;
         }
 
         [Fact]
         public async Task GetCurrentWeather_WithoutCityCode_CallProperMethod()
         {
-            var mock = AutoMock.GetLoose();
-            var response = new Mock<IRestResponse>();
-            var response2 = new Mock<IRestResponse>();
-            using var r = new StreamReader("Repositories/TestResponses/AccuWeatherCurrentWeather.json");
-            var json = await r.ReadToEndAsync();
-            response.Setup(x => x.Content).Returns(json);
-            response.Setup(x => x.IsSuccessful).Returns(true);
-            response2.Setup(x => x.Content).Returns("{Key: '1234'}");
-            response2.Setup(x => x.IsSuccessful).Returns(true);
-            mock.Mock<IRestClient>().Setup(x =>
-                    x.ExecuteAsync(It.Is<RestRequest>(z => z.Resource == "currentconditions/v1/1234"),
-                        CancellationToken.None))
-                .ReturnsAsync(response.Object);
-            mock.Mock<IRestClient>().Setup(x =>
+            var clientMock = new Mock<IRestClient>();
+            await SetupWeatherRestResponse(clientMock);
+            await SetupCitySearchResponse(clientMock);
+            var dateProvider = CreateDateProviderMock();
+            var repository = AccuWeatherRepository.FromCityCode("", "", dateProvider.Object, clientMock.Object);
+
+            await repository.GetCurrentWeather();
+
+            Assert.Equal("1411530", repository.CityCode);
+        }
+
+        private static async Task<Mock<IRestResponse>> SetupCitySearchResponse(Mock<IRestClient> clientMock)
+        {
+            var response = await CreateCitySearchResponseMock();
+            AddCitySearchResponseToRestClientMock(clientMock, response.Object);
+            return response;
+        }
+
+        private static void AddCitySearchResponseToRestClientMock(Mock<IRestClient> clientMock, IRestResponse citySearchResponseMock)
+        {
+            clientMock.Setup(x =>
                 x.ExecuteAsync(It.Is<RestRequest>(z => z.Resource == "locations/v1/cities/geoposition/search"),
-                    CancellationToken.None)).ReturnsAsync(response2.Object);
-            mock.Mock<IDateProvider>().Setup(x => x.GetActualDateTime()).Returns(new DateTime(2020, 01, 01));
-            var repo = AccuWeatherRepository.CreateInstanceWithCityCode("", "", mock.Create<IDateProvider>(),
-                mock.Create<IRestClient>());
+                    CancellationToken.None)).ReturnsAsync(citySearchResponseMock);
+        }
 
-            await repo.GetCurrentWeather();
-
-            Assert.Equal("1234", repo.CityCode);
+        private static async Task<Mock<IRestResponse>> CreateCitySearchResponseMock()
+        {
+            var response2 = new Mock<IRestResponse>();
+            var responseResult = await LoadJsonResponse("Repositories/TestResponses/AccuWeatherCitySearch.json");
+            response2.Setup(x => x.Content).Returns(responseResult);
+            response2.Setup(x => x.IsSuccessful).Returns(true);
+            return response2;
         }
 
         [Fact]
-        public async Task GetCurrentWeather_JsonIsEmpty_ThrowsNullReferenceException()
+        public async Task GetCurrentWeather_JsonResponseIsEmpty_ThrowsNullReferenceException()
         {
-            var mock = AutoMock.GetLoose();
-            var response = new Mock<IRestResponse>();
+            var client = new Mock<IRestClient>();
+            var response = await SetupWeatherRestResponse(client);
             response.Setup(x => x.Content).Returns("");
-            response.Setup(x => x.IsSuccessful).Returns(true);
-            mock.Mock<IRestClient>().Setup(x => x.ExecuteAsync(It.IsAny<RestRequest>(), CancellationToken.None))
-                .ReturnsAsync(response.Object);
-            mock.Mock<IDateProvider>().Setup(x => x.GetActualDateTime()).Returns(new DateTime(2020, 01, 01));
+            var dateProvider = CreateDateProviderMock();
 
-            var repo = AccuWeatherRepository.CreateInstanceWithCityCode("", "1234",
-                mock.Container.Resolve<IDateProvider>(),
-                mock.Container.Resolve<IRestClient>());
+            var repo = AccuWeatherRepository.FromCityCode("", _cityCode, dateProvider.Object, client.Object);
 
             await Assert.ThrowsAnyAsync<NullReferenceException>(() => repo.GetCurrentWeather());
+        }
+
+        [Fact]
+        public async Task GetCurrentWeather_HttpRequestWasNotSuccessful_ThrowsHttpRequestException()
+        {
+            var client = new Mock<IRestClient>();
+            var response = await SetupWeatherRestResponse(client);
+            response.Setup(x => x.IsSuccessful).Returns(false);
+            var dateProvider = CreateDateProviderMock();
+
+            var repo = AccuWeatherRepository.FromCityCode("", _cityCode, dateProvider.Object, client.Object);
+
+            await Assert.ThrowsAnyAsync<HttpRequestException>(() => repo.GetCurrentWeather());
         }
     }
 }
