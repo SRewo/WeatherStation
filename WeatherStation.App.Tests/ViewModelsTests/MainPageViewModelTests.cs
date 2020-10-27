@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using Prism.Navigation;
@@ -9,97 +11,112 @@ using Xunit;
 
 namespace WeatherStation.App.Tests.ViewModelsTests
 {
-    public class MainPageViewModelTests : MainPageViewModel
-        {
+    public class MainPageViewModelTests
+    {
 
         [Fact]
         public async Task PerformRequiredTasks_WeatherDataIsNull_GetsWeatherDataFromRepository()
         {
-            var mock = new Mock<IWeatherRepository>();
-            var builder = new WeatherDataBuilder();
-            mock.Setup(x => x.GetCurrentWeather()).ReturnsAsync(builder.Build);
-            var parameters = new NavigationParameters {{"repository", mock.Object}};
+            var storeMock = new Mock<IWeatherRepositoryStore>();
+            PrepareCurrentWeatherRepository(storeMock);
+            var parameters = new NavigationParameters {{"repositoryStore", storeMock.Object}};
+            var model = CreateViewModel();
+            model.WeatherData = null;
 
-            await PerformRequiredTasks(parameters);
+            await model.PerformRequiredTasks(parameters);
 
-            mock.Verify(x => x.GetCurrentWeather(), Times.Once);
+            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Once);
         }
 
+        private void PrepareCurrentWeatherRepository(Mock<IWeatherRepositoryStore> storeMock)
+        {
+
+            var weatherData = new WeatherData();
+            var weatherDataList = new List<WeatherData> {weatherData};
+            storeMock.Setup(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository()).ReturnsAsync(weatherDataList);
+        }
+
+        private MainPageViewModel CreateViewModel()
+        {
+            var dateProvider = PrepareDateProvider();
+            return new MainPageViewModel(dateProvider.Object);
+        }
 
         [Fact]
-        public async Task _WeatherDataDateDiffIsLargerThan1Hour_GetsWeatherDataFromRepository()
+        public async Task PerformRequiredTasks_WeatherDataDateDiffIsLargerThan1Hour_GetsWeatherDataFromRepository()
         {
-            var repositoryMock = new Mock<IWeatherRepository>();
+            var storeMock = new Mock<IWeatherRepositoryStore>();
+            PrepareCurrentWeatherRepository(storeMock);
+            var parameters = new NavigationParameters() {{"repositoryStore", storeMock.Object} };
+            var model = CreateViewModel();
             var weatherDate = new DateTime(2020, 01, 01, 10, 59, 00);
-            WeatherData = new WeatherDataBuilder().SetDate(weatherDate).Build();
-            var parameters = new NavigationParameters() {{"repository", repositoryMock.Object} };
-            PrepareDateProvider();
+            model.WeatherData = new WeatherData {Date = weatherDate};
 
-            await PerformRequiredTasks(parameters);
+            await model.PerformRequiredTasks(parameters);
 
-            repositoryMock.Verify(x => x.GetCurrentWeather(), Times.Once);
+            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Once);
         }
 
-        private void PrepareDateProvider()
+        private Mock<IDateProvider> PrepareDateProvider()
         {
             var dateProviderMock = new Mock<IDateProvider>();
             var mockedCurrentDatetime = new DateTime(2020, 01, 01, 12, 00, 00);
             dateProviderMock.Setup(x => x.GetActualDateTime()).Returns(mockedCurrentDatetime);
-            this.DateProvider = dateProviderMock.Object;
+            return dateProviderMock;
         }
 
         [Fact]
         public async Task PerformRequiredTasks_WeatherDataDateDiffIsSmallerThan1Hour_WeatherDataDoesNotChange()
         {
-            var repositoryMock = new Mock<IWeatherRepository>();
+            var storeMock = new Mock<IWeatherRepositoryStore>();
+            PrepareCurrentWeatherRepository(storeMock);
+            var parameters = new NavigationParameters() {{"repositoryStore", storeMock.Object} };
+            var model = CreateViewModel();
             var weatherDate = new DateTime(2020, 01, 01, 11, 59, 00);
-            WeatherData = new WeatherDataBuilder().SetDate(weatherDate).Build();
-            var parameters = new NavigationParameters() {{"repository", repositoryMock.Object} };
-            PrepareDateProvider();
+            model.WeatherData = new WeatherData {Date = weatherDate};
 
-            await PerformRequiredTasks(parameters);
+            await model.PerformRequiredTasks(parameters);
 
-            repositoryMock.Verify(x => x.GetCurrentWeather(), Times.Never);
+
+            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Never);
         }
 
         [Fact]
         public async Task PerformRequiredTasks_RepositoryContainsDailyForecasts_SetsPropertyToTrue()
         {
-            var repositoryMock = PrepareRepositoryMockWithDailyForecasts();
-            var parameters = new NavigationParameters() {{"repository", repositoryMock.Object} };
-            ContainsDailyForecasts = false;
+            var repositoryMock = new Mock<IWeatherRepositoryStore>();
+            var dailyRepository = new Mock<IWeatherRepository>();
+            repositoryMock.Setup(x => x.DailyForecastsRepository).Returns(dailyRepository.Object);
+            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
+            var dateProvider = PrepareDateProvider();
+            var model = new MainPageViewModel(dateProvider.Object);
 
-            await PerformRequiredTasks(parameters);
+            await model.PerformRequiredTasks(parameters);
 
-            Assert.True(ContainsDailyForecasts);
+            Assert.True(model.ContainsDailyForecasts);
         }
-
-        private static Mock<IWeatherRepository> PrepareRepositoryMockWithDailyForecasts()
-        {
-            var repositoryMock = new Mock<IWeatherRepository>();
-            var dailyRepositoryMock = new Mock<IContainsDailyForecast>();
-            repositoryMock.Setup(x => x.DailyRepository).Returns(dailyRepositoryMock.Object);
-            return repositoryMock;
-        }
-
 
         [Fact]
         public async Task PerformRequiredTasks_RepositoryContainsHourlyForecasts_SetsPropertyToTrue()
         {
-            var repositoryMock = PrepareRepositoryMockWithHourlyForecasts();
-            var parameters = new NavigationParameters() {{"repository", repositoryMock.Object} };
-            ContainsHourlyForecasts = false;
+             var repositoryMock = new Mock<IWeatherRepositoryStore>();
+            var hourlyForecasts = new Mock<IWeatherRepository>();
+            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
+            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
+            var dateProvider = PrepareDateProvider();
+            var model = new MainPageViewModel(dateProvider.Object);
 
-            await PerformRequiredTasks(parameters);
+            await model.PerformRequiredTasks(parameters);
 
-            Assert.True(ContainsHourlyForecasts);
+            Assert.True(model.ContainsHourlyForecasts);
+
         }
 
-        private static Mock<IWeatherRepository> PrepareRepositoryMockWithHourlyForecasts()
+        private static Mock<IWeatherRepositoryStore> PrepareRepositoryMockWithHourlyForecasts()
         {
-            var repositoryMock = new Mock<IWeatherRepository>();
-            var hourlyRepositoryMock = new Mock<IContainsHourlyForecast>();
-            repositoryMock.Setup(x => x.HourlyRepository).Returns(hourlyRepositoryMock.Object);
+            var repositoryMock = new Mock<IWeatherRepositoryStore>();
+            var hourlyRepositoryMock = new Mock<IWeatherRepository>();
+            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyRepositoryMock.Object);
             return repositoryMock;
         }
 

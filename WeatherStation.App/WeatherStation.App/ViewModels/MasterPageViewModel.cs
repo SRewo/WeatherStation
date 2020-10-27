@@ -11,7 +11,7 @@ namespace WeatherStation.App.ViewModels
 {
     public class MasterPageViewModel : BindableBase
     {
-        private readonly IWeatherRepository[] _repositories;
+        private readonly IWeatherRepositoryStore[] _repositories;
         private ObservableCollection<MenuItem> _menuItems;
         private MenuItem _selectedItem;
         private readonly INavigationService _navigationService;
@@ -30,7 +30,7 @@ namespace WeatherStation.App.ViewModels
 
         public DelegateCommand OpenViewCommand { get; set; }
 
-        public MasterPageViewModel(IWeatherRepository[] weatherRepositories, INavigationService service)
+        public MasterPageViewModel(IWeatherRepositoryStore[] weatherRepositories, INavigationService service)
         {
             _repositories = weatherRepositories;
             _navigationService = service;
@@ -38,42 +38,29 @@ namespace WeatherStation.App.ViewModels
             MenuItems = new ObservableCollection<MenuItem>(CreateMenuItems().Result);
         }
 
-        private async Task<MenuItem[]> CreateMenuItems()
+        public async Task<MenuItem[]> CreateMenuItems()
         {
             var collection = new List<MenuItem>();
             collection.AddRange(await CreateRepositoryMenuItems(_repositories));
-            collection.AddRange(await CreateAdditionalMenuItems());
             return collection.ToArray();
         }
 
-        public Task<MenuItem> CreateMenuItemFromRepository(IWeatherRepository repository)
+        private Task<MenuItem> CreateMenuItemFromRepository(IWeatherRepositoryStore repositoryStore)
         {
             var item = new MenuItem
             {
                 TargetView = nameof(MainPageView),
-                Title = repository.RepositoryName,
-                Parameters = new NavigationParameters {{"repository", repository}}
+                Title = repositoryStore.RepositoryName,
+                Parameters = new NavigationParameters {{"repositoryStore", repositoryStore}}
             };
             return Task.FromResult(item);
         }
 
-        public async Task<IList<MenuItem>> CreateRepositoryMenuItems(IEnumerable<IWeatherRepository> repositories)
+        private async Task<IList<MenuItem>> CreateRepositoryMenuItems(IEnumerable<IWeatherRepositoryStore> repositories)
         {
             var menuItems = new List<MenuItem>();
             foreach(var r in repositories) menuItems.Add(await CreateMenuItemFromRepository(r));
             return menuItems;
-        }
-
-        public async Task<IList<MenuItem>> CreateAdditionalMenuItems()
-        {
-            var additionalMenuItems = new List<MenuItem> {await CreateSettingsMenuItem()};
-            return additionalMenuItems;
-        }
-
-        public Task<MenuItem> CreateSettingsMenuItem()
-        {
-            var settingsMenuItem = new MenuItem {TargetView = nameof(SettingsView), Title = "Settings"};
-            return Task.FromResult(settingsMenuItem);
         }
 
         public async Task OpenViewAsync()
