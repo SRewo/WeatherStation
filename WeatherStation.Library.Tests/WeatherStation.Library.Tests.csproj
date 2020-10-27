@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="Repositories\TestResponses\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +27,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Repositories\TestResponses\AccuWeatherCurrentWeather.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\TestResponses\AccuWeatherDailyForecasts.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\TestResponses\AccuWeatherHourlyForecasts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
