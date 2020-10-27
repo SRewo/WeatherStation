@@ -1,9 +1,11 @@
-﻿namespace WeatherStation.Library.Interfaces
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace WeatherStation.Library.Interfaces
 {
-    public interface IWeatherRepository : IBasicWeatherRepository
+    public interface IWeatherRepository
     {
-        IContainsDailyForecast DailyRepository { get; }
-        IContainsHistoricalData HistoricalRepository { get; }
-        IContainsHourlyForecast HourlyRepository { get; }
+        string Language { get; set; }
+        Task<IEnumerable<WeatherData>> GetWeatherDataFromRepository();
     }
 }

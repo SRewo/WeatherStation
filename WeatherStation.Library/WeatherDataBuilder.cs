@@ -2,13 +2,6 @@
 
 namespace WeatherStation.Library
 {
-    public enum TemperatureUnit
-    {
-        Celcius,
-        Kelvin,
-        Fahrenheit
-    }
-
     public sealed class WeatherDataBuilder : FunctionalBuilder<WeatherData, WeatherDataBuilder>
     {
         public WeatherDataBuilder SetDate(DateTime date)
@@ -19,24 +12,24 @@ namespace WeatherStation.Library
             return Do(x => x.Date = date);
         }
 
-        public WeatherDataBuilder SetTemperature(float value, TemperatureUnit unit)
+        public WeatherDataBuilder SetTemperature(float value, TemperatureScale unit)
         {
-            return Do(x => x.Temperature = ChangeToCelcius(value, unit));
+            return Do(x => x.Temperature = CreateTemperature(value, unit));
         }
 
-        public WeatherDataBuilder SetMinTemperature(float value, TemperatureUnit unit)
+        public WeatherDataBuilder SetMinTemperature(float value, TemperatureScale unit)
         {
-            return Do(x => x.TemperatureMin = ChangeToCelcius(value, unit));
+            return Do(x => x.TemperatureMin = CreateTemperature(value, unit));
         }
 
-        public WeatherDataBuilder SetMaxTemperature(float value, TemperatureUnit unit)
+        public WeatherDataBuilder SetMaxTemperature(float value, TemperatureScale unit)
         {
-            return Do(x => x.TemperatureMax = ChangeToCelcius(value, unit));
+            return Do(x => x.TemperatureMax = CreateTemperature(value, unit));
         }
 
-        public WeatherDataBuilder SetApparentTemperature(float value, TemperatureUnit unit)
+        public WeatherDataBuilder SetApparentTemperature(float value, TemperatureScale unit)
         {
-            return Do(x => x.TemperatureApparent = ChangeToCelcius(value, unit));
+            return Do(x => x.TemperatureApparent = CreateTemperature(value, unit));
         }
 
         public WeatherDataBuilder SetPressure(int value)
@@ -101,18 +94,16 @@ namespace WeatherStation.Library
         }
 
 
-        private float ChangeToCelcius(float value, TemperatureUnit unit)
+        private Temperature CreateTemperature(float value, TemperatureScale unit)
         {
             switch (unit)
             {
-                case TemperatureUnit.Fahrenheit:
-                    return (value - 32) / 1.8f;
-                case TemperatureUnit.Kelvin:
-                    return value - 273.15f;
-                case TemperatureUnit.Celcius:
-                    return value;
+                case TemperatureScale.Fahrenheit:
+                    return new FahrenheitTemperature(value);
+                case TemperatureScale.Celsius:
+                    return new CelsiusTemperature(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(unit), unit, null);
+                    throw new ArgumentOutOfRangeException(nameof(unit), unit, $"Temperature unit {unit} is not yet implemented");
             }
         }
     }

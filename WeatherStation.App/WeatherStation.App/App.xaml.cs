@@ -1,16 +1,22 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Prism;
 using Prism.Ioc;
+using Prism.Navigation;
 using Prism.Unity;
 using RestSharp;
-using Unity.Injection;
+using Unity;
 using WeatherStation.App.ViewModels;
 using WeatherStation.App.Views;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories;
+using Xamarin.Essentials;
 using Xamarin.Forms;
+using Xamarin.Forms.Internals;
 
 namespace WeatherStation.App
 {
@@ -35,24 +41,44 @@ namespace WeatherStation.App
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            var accuRestClient = new RestClient("http://dataservice.accuweather.com");
-            var dateProvider = new DateProvider();
             containerRegistry.Register<IDateProvider, DateProvider>();
-            containerRegistry.Register(typeof(IWeatherRepository),() => AccuWeatherRepository.CreateInstanceWithCityCode(AppApiKeys.AccuWeatherApiKey, "1411530", dateProvider, accuRestClient));
+            RegisterRepositories(containerRegistry);
+            RegisterViewsForNavigation(containerRegistry);
+        }
 
-            containerRegistry.RegisterForNavigation<MainPage, MainPageViewModel>();
+        private void RegisterViewsForNavigation(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.RegisterForNavigation<MainPageView, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
-            containerRegistry.RegisterForNavigation<DetailPage>();
+            containerRegistry.RegisterForNavigation<DetailPageView>();
+            containerRegistry.RegisterForNavigation<SettingsView, SettingsViewModel>();
+        }
+
+        private void RegisterRepositories(IContainerRegistry containerRegistry)
+        {
+            RegisterAccuWeatherRepository(containerRegistry);
+        }
+
+        private void RegisterAccuWeatherRepository(IContainerRegistry containerRegistry)
+        {
+            var accuRestClient = new RestClient("http://dataservice.accuweather.com");
+            containerRegistry.RegisterSingleton(typeof(IWeatherRepository),
+                () => AccuWeatherRepository.FromCityCode(AppApiKeys.AccuWeatherApiKey,
+                    Preferences.Get("CityCode", "1411530"),
+                    Container.Resolve<IDateProvider>(),
+                    accuRestClient));
         }
 
         protected override async void OnInitialized()
         {
             InitializeComponent();
+            await NavigateToMainView();
+        }
 
-            var result = await NavigationService.NavigateAsync("DetailPage/NavigationPage/MainPage");
-            if (result.Success) return;
-            Console.WriteLine(result.Exception);
-            Debugger.Break();
+        private Task<INavigationResult> NavigateToMainView()
+        {
+            var parameters = new NavigationParameters {{"repository", Container.Resolve<IWeatherRepository>()}};
+            return NavigationService.NavigateAsync("DetailPageView/NavigationPage/MainPageView", parameters);
         }
 
         protected override void OnResume()

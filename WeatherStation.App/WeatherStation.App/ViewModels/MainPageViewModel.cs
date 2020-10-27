@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
-using Xamarin.Forms.Internals;
 
 namespace WeatherStation.App.ViewModels
 {
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
-        private readonly IDateProvider _dateProvider;
-        private readonly IWeatherRepository _repository;
+        protected IDateProvider DateProvider;
+        private IWeatherRepositoryStore _repositoryStore;
 
 
         private IEnumerable<WeatherData> _weatherDailyData;
@@ -24,12 +22,14 @@ namespace WeatherStation.App.ViewModels
 
         private IEnumerable<WeatherData> _weatherHourlyData;
 
-        public MainPageViewModel(IDateProvider dateProvider, IWeatherRepository repository)
+        protected MainPageViewModel()
         {
-            ContainsDailyForecasts = repository.DailyRepository != null;
-            ContainsHourlyForecasts = repository.DailyRepository != null;
-            _dateProvider = dateProvider;
-            _repository = repository;
+
+        }
+
+        public MainPageViewModel(IDateProvider dateProvider)
+        {
+            DateProvider = dateProvider;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
         }
 
@@ -61,21 +61,56 @@ namespace WeatherStation.App.ViewModels
 
         public async void OnNavigatedTo(INavigationParameters parameters)
         {
+            await PerformRequiredTasks(parameters);
+        }
+
+        public async Task PerformRequiredTasks(INavigationParameters parameters)
+        {
+            await GetVariablesFromParameters(parameters);
+            await CheckIfRepositoryContainsDailyAndHourlyForecasts();
             await GetData();
         }
 
-        public async Task GetData()
+        private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
-            if (WeatherData == null || _dateProvider.GetActualDateTime() - WeatherData.Date > TimeSpan.FromMinutes(30))
+            _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
+            return Task.CompletedTask;
+        }
+
+        private async Task GetData()
+        {
+            try
             {
-                WeatherData = await _repository.GetCurrentWeather();
-                //WeatherHourlyData = ContainsHourlyForecasts
-                  //  ? await _repository.HourlyRepository.GetHourlyForecast()
-                  //  : new List<WeatherData>();
-                //WeatherDailyData = ContainsDailyForecasts
-                 //   ? await _repository.DailyRepository.GetDailyForecast()
-                 //   : new List<WeatherData>();
+                await GetDataIfNotCurrent();
             }
+            catch (Exception ex)
+            {
+               Console.WriteLine(ex.Message);
+            }
+        }
+
+        private async Task GetDataIfNotCurrent()
+        {
+            if (!IsWeatherDataCurrent())
+                await DownloadWeatherDataFromRepository();
+        }
+
+        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        {
+            ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
+            ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
+            return Task.CompletedTask;
+        }
+
+        private async Task DownloadWeatherDataFromRepository()
+        {
+            var currentWeather = await _repositoryStore.CurrentWeatherRepository.GetWeatherDataFromRepository();
+            WeatherData = currentWeather.First();
+        }
+
+        private bool IsWeatherDataCurrent()
+        {
+            return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
         }
     }
 }

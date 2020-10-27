@@ -29,71 +29,51 @@ namespace WeatherStation.Library.Tests
         }
 
         [Theory]
-        [InlineData(10, 10, TemperatureUnit.Celcius)]
-        [InlineData(-20, -20, TemperatureUnit.Celcius)]
-        [InlineData(59, 15, TemperatureUnit.Fahrenheit)]
-        [InlineData(32, 0, TemperatureUnit.Fahrenheit)]
-        [InlineData(14, -10, TemperatureUnit.Fahrenheit)]
-        [InlineData(273.15f, 0, TemperatureUnit.Kelvin)]
-        [InlineData(294.15, 21, TemperatureUnit.Kelvin)]
-        public void SetTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureUnit unit)
+        [InlineData(10, 10, TemperatureScale.Celsius)]
+        [InlineData(-20, -20, TemperatureScale.Celsius)]
+        public void SetTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureScale unit)
         {
             var builder = new WeatherDataBuilder();
             builder.SetTemperature(input, unit);
             var data = builder.Build();
 
-            Assert.Equal(expectedValue, data.Temperature);
+            Assert.Equal(expectedValue, data.Temperature.Value);
         }
 
         [Theory]
-        [InlineData(10, 10, TemperatureUnit.Celcius)]
-        [InlineData(-20, -20, TemperatureUnit.Celcius)]
-        [InlineData(59, 15, TemperatureUnit.Fahrenheit)]
-        [InlineData(32, 0, TemperatureUnit.Fahrenheit)]
-        [InlineData(14, -10, TemperatureUnit.Fahrenheit)]
-        [InlineData(273.15f, 0, TemperatureUnit.Kelvin)]
-        [InlineData(294.15, 21, TemperatureUnit.Kelvin)]
-        public void SetMinTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureUnit unit)
+        [InlineData(10, 10, TemperatureScale.Celsius)]
+        [InlineData(-20, -20, TemperatureScale.Celsius)]
+        public void SetMinTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureScale unit)
         {
             var builder = new WeatherDataBuilder();
             builder.SetMinTemperature(input, unit);
             var data = builder.Build();
 
-            Assert.Equal(expectedValue, data.TemperatureMin);
+            Assert.Equal(expectedValue, data.TemperatureMin.Value);
         }
 
         [Theory]
-        [InlineData(10, 10, TemperatureUnit.Celcius)]
-        [InlineData(-20, -20, TemperatureUnit.Celcius)]
-        [InlineData(59, 15, TemperatureUnit.Fahrenheit)]
-        [InlineData(32, 0, TemperatureUnit.Fahrenheit)]
-        [InlineData(14, -10, TemperatureUnit.Fahrenheit)]
-        [InlineData(273.15f, 0, TemperatureUnit.Kelvin)]
-        [InlineData(294.15, 21, TemperatureUnit.Kelvin)]
-        public void SetMaxTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureUnit unit)
+        [InlineData(10, 10, TemperatureScale.Celsius)]
+        [InlineData(-20, -20, TemperatureScale.Celsius)]
+        public void SetMaxTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureScale unit)
         {
             var builder = new WeatherDataBuilder();
             builder.SetMaxTemperature(input, unit);
             var data = builder.Build();
 
-            Assert.Equal(expectedValue, data.TemperatureMax);
+            Assert.Equal(expectedValue, data.TemperatureMax.Value);
         }
 
         [Theory]
-        [InlineData(10, 10, TemperatureUnit.Celcius)]
-        [InlineData(-20, -20, TemperatureUnit.Celcius)]
-        [InlineData(59, 15, TemperatureUnit.Fahrenheit)]
-        [InlineData(32, 0, TemperatureUnit.Fahrenheit)]
-        [InlineData(14, -10, TemperatureUnit.Fahrenheit)]
-        [InlineData(273.15f, 0, TemperatureUnit.Kelvin)]
-        [InlineData(294.15, 21, TemperatureUnit.Kelvin)]
-        public void SetApparentTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureUnit unit)
+        [InlineData(10, 10, TemperatureScale.Celsius)]
+        [InlineData(-20, -20, TemperatureScale.Celsius)]
+        public void SetApparentTemperature_ProperlySetsValue(float input, float expectedValue, TemperatureScale unit)
         {
             var builder = new WeatherDataBuilder();
             builder.SetApparentTemperature(input, unit);
             var data = builder.Build();
 
-            Assert.Equal(expectedValue, data.TemperatureApparent);
+            Assert.Equal(expectedValue, data.TemperatureApparent.Value);
         }
 
         [Fact]
