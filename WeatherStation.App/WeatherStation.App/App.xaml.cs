@@ -14,6 +14,7 @@ using WeatherStation.App.Views;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories;
+using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
@@ -62,8 +63,8 @@ namespace WeatherStation.App
         private void RegisterAccuWeatherRepository(IContainerRegistry containerRegistry)
         {
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
-            containerRegistry.RegisterSingleton(typeof(IWeatherRepository),
-                () => AccuWeatherRepository.FromCityCode(AppApiKeys.AccuWeatherApiKey,
+            containerRegistry.RegisterSingleton(typeof(IWeatherRepositoryStore),
+                () => AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
                     Preferences.Get("CityCode", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient));
@@ -77,7 +78,7 @@ namespace WeatherStation.App
 
         private Task<INavigationResult> NavigateToMainView()
         {
-            var parameters = new NavigationParameters {{"repository", Container.Resolve<IWeatherRepository>()}};
+            var parameters = new NavigationParameters {{"repositoryStore", Container.Resolve<IWeatherRepositoryStore>()}};
             return NavigationService.NavigateAsync("DetailPageView/NavigationPage/MainPageView", parameters);
         }
 
