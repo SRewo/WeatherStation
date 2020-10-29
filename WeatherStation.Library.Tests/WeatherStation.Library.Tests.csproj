@@ -26,6 +26,9 @@
     <None Update="Repositories\TestResponses\AccuWeatherCitySearch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Repositories\TestResponses\AccuWeatherCitySearchWithCoordinates.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Repositories\TestResponses\AccuWeatherCurrentWeather.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

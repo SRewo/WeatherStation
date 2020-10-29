@@ -30,11 +30,26 @@ namespace WeatherStation.Library.Repositories
         }
         private static dynamic ConvertRestResultToDynamicObject(IRestResponse result)
         {
-            var converter = new ExpandoObjectConverter();
-            dynamic d = JsonConvert.DeserializeObject<ExpandoObject[]>(result.Content, converter);
+            var d = DeserializeObjectToDynamicObject(result.Content);
 
             if (d == null)
                 throw new NullReferenceException("Content of the rest result was null.");
+            return d;
+        }
+
+        private static dynamic DeserializeObjectToDynamicObject(string stringToDeserialize)
+        {
+            var converter = new ExpandoObjectConverter();
+            dynamic d;
+            try
+            {
+                d = JsonConvert.DeserializeObject<ExpandoObject[]>(stringToDeserialize, converter);
+            }
+            catch (JsonSerializationException)
+            {
+                d = JsonConvert.DeserializeObject<ExpandoObject>(stringToDeserialize, converter);
+            }
+
             return d;
         }
 

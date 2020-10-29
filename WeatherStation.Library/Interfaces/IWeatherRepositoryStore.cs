@@ -6,8 +6,6 @@ namespace WeatherStation.Library.Interfaces
     public interface IWeatherRepositoryStore
     {
         string RepositoryName { get;}
-        float Latitude { get;}
-        float Longitude { get;}
         string CityName { get;}
 
         IWeatherRepository CurrentWeatherRepository { get; }
