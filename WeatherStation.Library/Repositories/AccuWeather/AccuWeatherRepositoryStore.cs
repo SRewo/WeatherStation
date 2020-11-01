@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
@@ -64,9 +68,14 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         {
             CheckCoordinates(latitude, longitude);
             var result = await GetCityDataFromApi(latitude, longitude);
+            SetCityDataProperties(result);
+            CreateRepositories(CityCode);
+        }
+
+        private void SetCityDataProperties(dynamic result)
+        {
             CityCode = result.Key;
             CityName = result.LocalizedName;
-            CreateRepositories(CityCode);
         }
 
         private async Task<dynamic> GetCityDataFromApi(float latitude, float longitude)
@@ -111,30 +120,85 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         public async Task ChangeCity(string cityName)
         {
+            CheckIfCityNameIsValid(cityName);
+            var result = await GetCityDataFromApi(cityName);
+            SetCityDataProperties(result[0]);
+            CreateRepositories(CityCode);
+        }
+
+        private async Task<dynamic> GetCityDataFromApi(string cityName)
+        {
+            var parameters = CreateCitySearchWithNameParameters(cityName);
+            var handler = new RestRequestHandler(_restClient, "locations/v1/cities/search");
+            var result = await handler.GetDataFromApi(parameters);
+            CheckIfResultContainsOnlyOneCity(result);
+            return result;
+        }
+
+        private static void CheckIfResultContainsOnlyOneCity(dynamic result)
+        {
+            var list = (ExpandoObject[]) result;
+
+            if (list.Length != 1)
+                throw new MultipleCitiesResultException("City search with name returned multiple cites. Provide additional information after ',' ex. CityName,Country");
+        }
+
+        private List<Parameter> CreateCitySearchWithNameParameters(string cityName)
+        {
+            var parameters = new List<Parameter>()
+            {
+                new Parameter("q", cityName, ParameterType.QueryString),
+                new Parameter("details", false, ParameterType.QueryString),
+                new Parameter("apikey", _apiKey, ParameterType.QueryString),
+                new Parameter("language", Language, ParameterType.QueryString)
+            };
+            return parameters;
+        }
+
+        private void CheckIfCityNameIsValid(string cityName)
+        {
+            if (string.IsNullOrEmpty(cityName))
+                throw new InvalidCityNameException("City name cannot be empty");
+
+            if (ContainsSpecialCharacters(cityName))
+                throw new InvalidCityNameException("City name cannot contain special characters");
+        }
+
+        private bool ContainsSpecialCharacters(string cityName)
+        {
+            var specialCharacters = "!@#$%^&*()_-=+/<>?\\|";
+            foreach (var specialCharacter in specialCharacters)
+                if (cityName.Contains(specialCharacter))
+                    return true;
+
+            return false;
         }
 
         public async Task ChangeLanguage(string languageCode)
         {
         }
+    }
 
-        private static string GetCityCodeFromRestResult(IRestResponse result)
+    public class MultipleCitiesResultException : Exception
+    {
+        public MultipleCitiesResultException(string message) : base(message)
         {
-            return string.Empty;
+
+        }
+    }
+
+    public class InvalidCityNameException : Exception
+    {
+        public InvalidCityNameException(string message) : base(message)
+        {
+
         }
 
     }
 
     public class LatitudeOutOfRangeException : Exception
     {
-        public LatitudeOutOfRangeException() : base()
-        {
-        }
-
         public LatitudeOutOfRangeException(string message) : base(message)
-        {
-        }
-
-        public LatitudeOutOfRangeException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }
