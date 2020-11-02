@@ -23,7 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Repositories\TestResponses\AccuWeatherCitySearch.json">
+    <None Update="Repositories\TestResponses\AccuWeatherCitySearchMultipleCitiesResult.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\TestResponses\AccuWeatherCitySearchSingleCityResult.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\TestResponses\AccuWeatherCitySearchWithCoordinates.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Repositories\TestResponses\AccuWeatherCurrentWeather.json">

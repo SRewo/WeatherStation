@@ -64,10 +64,10 @@ namespace WeatherStation.App
         {
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             containerRegistry.RegisterSingleton(typeof(IWeatherRepositoryStore),
-                () => AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
+                 () => AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
                     Preferences.Get("CityCode", "1411530"),
                     Container.Resolve<IDateProvider>(),
-                    accuRestClient));
+                    accuRestClient, Language.English).Result);
         }
 
         protected override async void OnInitialized()

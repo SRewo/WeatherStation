@@ -6,8 +6,6 @@ namespace WeatherStation.Library.Interfaces
     public interface IWeatherRepositoryStore
     {
         string RepositoryName { get;}
-        float Latitude { get;}
-        float Longitude { get;}
         string CityName { get;}
 
         IWeatherRepository CurrentWeatherRepository { get; }
@@ -17,6 +15,6 @@ namespace WeatherStation.Library.Interfaces
 
         Task ChangeCity(float latitude, float longitude);
         Task ChangeCity(string cityName);
-        Task ChangeLanguage(string languageCode);
+        Task ChangeLanguage(Language language);
     }
 }
