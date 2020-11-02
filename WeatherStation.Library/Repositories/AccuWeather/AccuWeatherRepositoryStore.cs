@@ -18,19 +18,22 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         public string CityCode { get; set; }
         public string CityName { get; set; }
         public string RepositoryName { get; set; } = "AccuWeather";
-        public string Language { get; set; }
+        public Language Language {get; private set; }
+        private string _languageCode;
         public IWeatherRepository CurrentWeatherRepository { get; private set; }
         public IWeatherRepository DailyForecastsRepository { get; private set; }
         public IWeatherRepository HistoricalDataRepository { get; private set; }
         public IWeatherRepository HourlyForecastsRepository { get; private set; }
 
 
-        public static AccuWeatherRepositoryStore FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient)
+        public static async Task<AccuWeatherRepositoryStore> FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient, Language language)
         {
-            return new AccuWeatherRepositoryStore(key, cityCode, dateProvider, restClient);
+            var store = new AccuWeatherRepositoryStore(key, cityCode, dateProvider, restClient);
+            await store.CreateRepositories(cityCode);
+            return store;
         }
 
-        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient)
+        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient, Language language)
         {
             var store = new AccuWeatherRepositoryStore(key, dateProvider, restClient);
             await store.ChangeCity(cityLatitude, cityLongitude);
@@ -47,10 +50,9 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         private AccuWeatherRepositoryStore(string apiKey, string cityCode, IDateProvider provider, IRestClient restClient) : this(apiKey, provider, restClient)
         {
             CityCode = cityCode;
-            CreateRepositories(cityCode);
         }
 
-        private void CreateRepositories(string cityCode)
+        private async Task CreateRepositories(string cityCode)
         {
             var currentWeatherHandler = new RestRequestHandler(_restClient, $"currentconditions/v1/{cityCode}");
             var hourlyForecastHandler = new RestRequestHandler(_restClient, $"forecasts/v1/hourly/12hour/{cityCode}");
@@ -62,6 +64,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new AccuWeatherHourlyForecastRepository(hourlyForecastHandler, _apiKey);
             DailyForecastsRepository =
                 new AccuWeatherDailyForecastRepository(dailyForecastHandler, _apiKey);
+            await ChangeLanguage(Language);
         }
 
         public async Task ChangeCity(float latitude, float longitude)
@@ -69,7 +72,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             CheckCoordinates(latitude, longitude);
             var result = await GetCityDataFromApi(latitude, longitude);
             SetCityDataProperties(result);
-            CreateRepositories(CityCode);
+            await CreateRepositories(CityCode);
         }
 
         private void SetCityDataProperties(dynamic result)
@@ -94,7 +97,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new Parameter("apikey", _apiKey, ParameterType.QueryString),
                 new Parameter("details", false, ParameterType.QueryString),
                 new Parameter("toplevel", true, ParameterType.QueryString),
-                new Parameter("language", Language, ParameterType.QueryString)
+                new Parameter("language", _languageCode, ParameterType.QueryString)
             };
             return parameters;
         }
@@ -123,7 +126,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             CheckIfCityNameIsValid(cityName);
             var result = await GetCityDataFromApi(cityName);
             SetCityDataProperties(result[0]);
-            CreateRepositories(CityCode);
+            await CreateRepositories(CityCode);
         }
 
         private async Task<dynamic> GetCityDataFromApi(string cityName)
@@ -150,7 +153,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new Parameter("q", cityName, ParameterType.QueryString),
                 new Parameter("details", false, ParameterType.QueryString),
                 new Parameter("apikey", _apiKey, ParameterType.QueryString),
-                new Parameter("language", Language, ParameterType.QueryString)
+                new Parameter("language", _languageCode, ParameterType.QueryString)
             };
             return parameters;
         }
@@ -166,7 +169,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         private bool ContainsSpecialCharacters(string cityName)
         {
-            var specialCharacters = "!@#$%^&*()_-=+/<>?\\|";
+            var specialCharacters = "!@#$%^&*()_=+<>?|";
             foreach (var specialCharacter in specialCharacters)
                 if (cityName.Contains(specialCharacter))
                     return true;
@@ -174,8 +177,19 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             return false;
         }
 
-        public async Task ChangeLanguage(string languageCode)
+        public Task ChangeLanguage(Language language)
         {
+            Language = language;
+            _languageCode = LanguageConverter.ConvertEnumToLanguageCode(language);
+            ChangeLanguageInRepositories(_languageCode);
+            return Task.CompletedTask;
+        }
+
+        private void ChangeLanguageInRepositories(string languageCode)
+        {
+            CurrentWeatherRepository.Language = languageCode;
+            DailyForecastsRepository.Language = languageCode;
+            HourlyForecastsRepository.Language = languageCode;
         }
     }
 
@@ -184,6 +198,14 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         public MultipleCitiesResultException(string message) : base(message)
         {
 
+        }
+
+        public MultipleCitiesResultException() : base()
+        {
+        }
+
+        public MultipleCitiesResultException(string message, Exception innerException) : base(message, innerException)
+        {
         }
     }
 
@@ -194,11 +216,26 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         }
 
+        public InvalidCityNameException() : base()
+        {
+        }
+
+        public InvalidCityNameException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
     }
 
     public class LatitudeOutOfRangeException : Exception
     {
         public LatitudeOutOfRangeException(string message) : base(message)
+        {
+        }
+
+        public LatitudeOutOfRangeException() : base()
+        {
+        }
+
+        public LatitudeOutOfRangeException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

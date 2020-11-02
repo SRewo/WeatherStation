@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Moq;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xunit;
 
@@ -38,7 +39,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var clientMock = await CreateRestClientMock(jsonResponseFilePath);
             var dateProviderMock = new Mock<IDateProvider>();
-            return AccuWeatherRepositoryStore.FromCityCode("", "",dateProviderMock.Object,clientMock.Object);
+            return await AccuWeatherRepositoryStore.FromCityCode("", "",dateProviderMock.Object,clientMock.Object, Language.English);
         }
 
         private static async Task< Mock<IRestClient>> CreateRestClientMock(string jsonResponseFilePath)
@@ -220,7 +221,6 @@ namespace WeatherStation.Library.Tests.Repositories
         }
 
         [Theory]
-        [InlineData("-Warsaw")]
         [InlineData("W@rsaw")]
         [InlineData("Warsaw!")]
         [InlineData("___Warsaw")]
@@ -230,6 +230,42 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
 
             await Assert.ThrowsAnyAsync<Exception>(() => store.ChangeCity(cityName));
+        }
+
+        [Fact]
+        public async Task ChangeLanguage_ValidExecution_ChangesCurrentWeatherRepositoryLanguageProperty()
+        {
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+
+            await store.ChangeLanguage(Language.English);
+
+            var expected = "en-EN";
+            var actual = store.CurrentWeatherRepository.Language;
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task ChangeLanguage_ValidExecution_ChangesHourlyForecastsRepositoryLanguageProperty()
+        {
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+
+            await store.ChangeLanguage(Language.English);
+
+            var expected = "en-EN";
+            var actual = store.HourlyForecastsRepository.Language;
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task ChangeLanguage_ValidExecution_ChangesDailyForecastsRepositoryLanguageProperty()
+        {
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+
+            await store.ChangeLanguage(Language.English);
+
+            var expected = "en-EN";
+            var actual = store.DailyForecastsRepository.Language;
+            Assert.Equal(expected, actual);
         }
     }
 }
