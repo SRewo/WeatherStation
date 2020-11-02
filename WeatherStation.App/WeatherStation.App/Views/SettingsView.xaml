@@ -5,7 +5,26 @@
              x:Class="WeatherStation.App.Views.SettingsView"
              prism:ViewModelLocator.AutowireViewModel="True">
     <ContentPage.Content>
-    <Grid>
+    <AbsoluteLayout>
+    <ScrollView>
+        <Grid Margin="20,10,20,20" >
+                <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="50"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Label Grid.ColumnSpan="3" HorizontalTextAlignment="Center" FontSize="35">Settings</Label>
+        <Label Grid.Row="1" Text="City:" FontSize="24" VerticalTextAlignment="Center"></Label>
+        <Entry Grid.Row="1" Grid.Column="1" ClearButtonVisibility="WhileEditing"></Entry>
+            <Button ImageSource="location_search_icon.png" Grid.Row="1" Grid.Column="2" HeightRequest="40" WidthRequest="50" BackgroundColor="Transparent"></Button>
     </Grid>
+    </ScrollView>
+    <Button WidthRequest="20" HeightRequest="20" AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/save_icon.png" BackgroundColor="White" BorderRadius="40" BorderWidth="2" BorderColor="Black"> </Button>
+    </AbsoluteLayout>
     </ContentPage.Content>
 </ContentPage>
