@@ -16,6 +16,8 @@ using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
+using Xamarin.Essentials.Implementation;
+using Xamarin.Essentials.Interfaces;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
 
@@ -43,6 +45,7 @@ namespace WeatherStation.App
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.Register<IDateProvider, DateProvider>();
+            RegisterXamarinEssentialsTypes(containerRegistry);
             RegisterRepositories(containerRegistry);
             RegisterViewsForNavigation(containerRegistry);
         }
@@ -58,6 +61,12 @@ namespace WeatherStation.App
         private void RegisterRepositories(IContainerRegistry containerRegistry)
         {
             RegisterAccuWeatherRepository(containerRegistry);
+        }
+
+        private void RegisterXamarinEssentialsTypes(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.Register<IPreferences, PreferencesImplementation>();
+            containerRegistry.Register<IGeolocation, GeolocationImplementation>();
         }
 
         private void RegisterAccuWeatherRepository(IContainerRegistry containerRegistry)

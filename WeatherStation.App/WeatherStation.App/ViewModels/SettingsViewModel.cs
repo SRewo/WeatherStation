@@ -2,14 +2,40 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using Prism.Commands;
+using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials;
+using Xamarin.Essentials.Interfaces;
 
 namespace WeatherStation.App.ViewModels
 {
     public class SettingsViewModel : BindableBase
     {
-        public SettingsViewModel()
+        private IEnumerable<IWeatherRepositoryStore> _weatherRepositoryStores;
+        private IPreferences _preferences;
+        private IGeolocation _geolocation;
+        private string _cityName;
+
+        public string CityName
         {
+            get => _cityName;
+            set => SetProperty(ref _cityName, value);
+        }
+
+        public DelegateCommand SaveSettingsCommand { get; set; }
+
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation)
+        {
+            _weatherRepositoryStores = weatherRepositoryStores;
+            _preferences = preferences;
+            _geolocation = geolocation;
+            SaveSettingsCommand = new DelegateCommand(async () => await SaveSettings());
+        }
+
+        public async Task SaveSettings()
+        {
+
         }
     }
 }
