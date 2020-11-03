@@ -45,6 +45,7 @@ namespace WeatherStation.App
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.Register<IDateProvider, DateProvider>();
+            containerRegistry.Register<IAlertService, AlertService>();
             RegisterXamarinEssentialsTypes(containerRegistry);
             RegisterRepositories(containerRegistry);
             RegisterViewsForNavigation(containerRegistry);
@@ -74,7 +75,7 @@ namespace WeatherStation.App
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             containerRegistry.RegisterSingleton(typeof(IWeatherRepositoryStore),
                  () => AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
-                    Preferences.Get("CityCode", "1411530"),
+                    Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, Language.English).Result);
         }

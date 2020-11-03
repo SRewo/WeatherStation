@@ -7,6 +7,7 @@ namespace WeatherStation.Library.Interfaces
     {
         string RepositoryName { get;}
         string CityName { get;}
+        string CityId { get; }
 
         IWeatherRepository CurrentWeatherRepository { get; }
         IWeatherRepository DailyForecastsRepository { get; }

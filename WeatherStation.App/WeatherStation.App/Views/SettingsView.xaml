@@ -20,7 +20,7 @@
 
         <Label Grid.ColumnSpan="3" HorizontalTextAlignment="Center" FontSize="35">Settings</Label>
         <Label Grid.Row="1" Text="City:" FontSize="24" VerticalTextAlignment="Center"></Label>
-        <Entry Grid.Row="1" Grid.Column="1" ClearButtonVisibility="WhileEditing"></Entry>
+        <Entry Grid.Row="1" Grid.Column="1" ClearButtonVisibility="WhileEditing" Text="{Binding CityName}"></Entry>
         <Button ImageSource="location_search_icon.png" Grid.Row="1" Grid.Column="2" HeightRequest="40" WidthRequest="50" BackgroundColor="Transparent"></Button>
     </Grid>
     </ScrollView>

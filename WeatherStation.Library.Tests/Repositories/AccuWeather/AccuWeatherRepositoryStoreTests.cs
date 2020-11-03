@@ -31,7 +31,7 @@ namespace WeatherStation.Library.Tests.Repositories
             await store.ChangeCity(52.13f, 21f);
 
             var expected = WarsawCityCode;
-            var actual = store.CityCode;
+            var actual = store.CityId;
             Assert.Equal(expected, actual);
         }
 
@@ -170,7 +170,7 @@ namespace WeatherStation.Library.Tests.Repositories
             await store.ChangeCity("Warsaw, Poland");
 
             var expected = WarsawCityCode;
-            var actual = store.CityCode;
+            var actual = store.CityId;
             Assert.Equal(expected, actual);
         }
 

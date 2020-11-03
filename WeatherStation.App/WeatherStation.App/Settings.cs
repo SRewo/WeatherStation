@@ -24,8 +24,8 @@ namespace WeatherStation.App
 
         public static string CityName
         {
-            get => AppSettings.GetValueOrDefault("CityName", string.Empty);
-            set => AppSettings.AddOrUpdateValue("CityName", value);
+            get => AppSettings.GetValueOrDefault("CityId", string.Empty);
+            set => AppSettings.AddOrUpdateValue("CityId", value);
         }
 
         public static float Latitude

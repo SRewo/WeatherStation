@@ -15,7 +15,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         private readonly string _apiKey;
         private readonly IDateProvider _provider;
         private readonly IRestClient _restClient;
-        public string CityCode { get; set; }
+        public string CityId { get; set; }
         public string CityName { get; set; }
         public string RepositoryName { get; set; } = "AccuWeather";
         public Language Language {get; private set; }
@@ -49,7 +49,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         private AccuWeatherRepositoryStore(string apiKey, string cityCode, IDateProvider provider, IRestClient restClient) : this(apiKey, provider, restClient)
         {
-            CityCode = cityCode;
+            CityId = cityCode;
         }
 
         private async Task CreateRepositories(string cityCode)
@@ -72,12 +72,12 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             CheckCoordinates(latitude, longitude);
             var result = await GetCityDataFromApi(latitude, longitude);
             SetCityDataProperties(result);
-            await CreateRepositories(CityCode);
+            await CreateRepositories(CityId);
         }
 
         private void SetCityDataProperties(dynamic result)
         {
-            CityCode = result.Key;
+            CityId = result.Key;
             CityName = result.LocalizedName;
         }
 
@@ -126,7 +126,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             CheckIfCityNameIsValid(cityName);
             var result = await GetCityDataFromApi(cityName);
             SetCityDataProperties(result[0]);
-            await CreateRepositories(CityCode);
+            await CreateRepositories(CityId);
         }
 
         private async Task<dynamic> GetCityDataFromApi(string cityName)
