@@ -7,6 +7,7 @@ using Prism.Mvvm;
 using Prism.Navigation;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using Xamarin.Essentials.Interfaces;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -14,6 +15,7 @@ namespace WeatherStation.App.ViewModels
     {
         protected IDateProvider DateProvider;
         private IWeatherRepositoryStore _repositoryStore;
+        private IPreferences _preferences;
 
 
         private IEnumerable<WeatherData> _weatherDailyData;
@@ -22,15 +24,12 @@ namespace WeatherStation.App.ViewModels
 
         private IEnumerable<WeatherData> _weatherHourlyData;
 
-        protected MainPageViewModel()
-        {
-
-        }
-
-        public MainPageViewModel(IDateProvider dateProvider)
+        public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences)
         {
             DateProvider = dateProvider;
+            _preferences = preferences;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
+            CityName = _preferences.Get("CityName", "");
         }
 
         public WeatherData WeatherData
@@ -53,6 +52,14 @@ namespace WeatherStation.App.ViewModels
         {
             get => _weatherDailyData;
             set => SetProperty(ref _weatherDailyData, value);
+        }
+
+        private string _cityName;
+
+        public string CityName
+        {
+            get => _cityName;
+            set => SetProperty(ref _cityName, value);
         }
 
         public void OnNavigatedFrom(INavigationParameters parameters)

@@ -142,8 +142,8 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         {
             var list = (ExpandoObject[]) result;
 
-            if (list.Length != 1)
-                throw new MultipleCitiesResultException("City search with name returned multiple cites. Provide additional information after ',' ex. CityName,Country");
+            if (list.Count() > 1)
+                throw new MultipleCitiesResultException("City search with name returned multiple cites. Provide additional information after ',' ex. CityName,Country or CityName,StateName");
         }
 
         private List<Parameter> CreateCitySearchWithNameParameters(string cityName)

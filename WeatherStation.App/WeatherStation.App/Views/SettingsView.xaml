@@ -24,7 +24,7 @@
         <Button ImageSource="location_search_icon.png" Grid.Row="1" Grid.Column="2" HeightRequest="40" WidthRequest="50" BackgroundColor="Transparent"></Button>
     </Grid>
     </ScrollView>
-    <Button WidthRequest="20" HeightRequest="20" AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/save_icon.png" BackgroundColor="White" BorderRadius="40" BorderWidth="2" BorderColor="Black"> </Button>
+    <Button Command="{Binding SaveSettingsCommand}"  WidthRequest="20" HeightRequest="20" AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/save_icon.png" BackgroundColor="White" BorderRadius="40" BorderWidth="2" BorderColor="Black"> </Button>
     </AbsoluteLayout>
     </ContentPage.Content>
 </ContentPage>

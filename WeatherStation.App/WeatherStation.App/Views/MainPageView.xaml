@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
-             Title="Ćwiklice" x:DataType="viewModels:MainPageViewModel">
+             Title="{Binding CityName}" x:DataType="viewModels:MainPageViewModel">
 
     <AbsoluteLayout>
         <ScrollView>

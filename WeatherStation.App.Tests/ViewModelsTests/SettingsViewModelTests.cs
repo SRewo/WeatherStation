@@ -31,6 +31,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             mock.Mock<IWeatherRepositoryStore>().Setup(x => x.CityId).Returns("14433");
             mock.Mock<IWeatherRepositoryStore>().Setup(x => x.RepositoryName).Returns("AccuWeather");
             var model = mock.Create<SettingsViewModel>();
+            model.CityName = "Warsaw";
 
             await model.SaveSettings();
 
