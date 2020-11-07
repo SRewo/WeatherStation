@@ -65,7 +65,7 @@ namespace WeatherStation.App.ViewModels
             }
         }
 
-        public async Task Save()
+        private async Task Save()
         {
             var currentCity = _preferences.Get("CityName", "");
             if(CityName != currentCity)
@@ -82,7 +82,10 @@ namespace WeatherStation.App.ViewModels
 
         private async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
         {
-            await store.ChangeCity(CityName);
+            if (AreCoordinatesUsed)
+                await store.ChangeCity(_latitude, _longitude);
+            else
+                await store.ChangeCity(CityName);
             _preferences.Set($"{store.RepositoryName}CityId", store.CityId);
         }
 

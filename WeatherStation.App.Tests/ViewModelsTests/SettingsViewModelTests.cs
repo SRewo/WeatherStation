@@ -145,9 +145,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         public async Task GetLocation_ProperExecution_ChangesCityName()
         {
             var mock = await CreateAutoMockWithGeolocation();
-            var placemark = new Placemark {Locality = "Warsaw", CountryName = "Poland"};
-            var placemarkList = new List<Placemark> {placemark};
-            mock.Mock<IGeocoding>().Setup(x => x.GetPlacemarksAsync(It.IsAny<Location>())).ReturnsAsync(placemarkList);
+            await SetupPlacemarks(mock);
             var model = mock.Create<SettingsViewModel>();
 
             await model.GetLocation();
@@ -155,6 +153,15 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var expected = "Warsaw,Poland";
             var actual = model.CityName;
             Assert.Equal(expected, actual);
+        }
+
+        private Task SetupPlacemarks(AutoMock mock)
+        {
+
+            var placemark = new Placemark {Locality = "Warsaw", CountryName = "Poland"};
+            var placemarkList = new List<Placemark> {placemark};
+            mock.Mock<IGeocoding>().Setup(x => x.GetPlacemarksAsync(It.IsAny<Location>())).ReturnsAsync(placemarkList);
+            return Task.CompletedTask;
         }
 
         [Fact]
@@ -194,6 +201,19 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             await model.GetLocation();
 
             mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), exception.Message), Times.Once);
+        }
+
+        [Fact]
+        public async Task SaveSettings_GeolocationIsUsed_UsesProperMethod()
+        {
+            var mock = await CreateAutoMockWithGeolocation();
+            await SetupPlacemarks(mock);
+            var model = mock.Create<SettingsViewModel>();
+            await model.GetLocation();
+
+            await model.SaveSettings();
+
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<float>(), It.IsAny<float>()),Times.Once);
         }
     }
 }
