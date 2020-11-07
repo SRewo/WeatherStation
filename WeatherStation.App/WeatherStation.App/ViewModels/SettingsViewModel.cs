@@ -1,9 +1,9 @@
-﻿using Prism.Mvvm;
-using System;
+﻿using System;
+using Prism.Mvvm;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Prism;
 using Prism.Commands;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories.AccuWeather;
@@ -17,25 +17,36 @@ namespace WeatherStation.App.ViewModels
         private IEnumerable<IWeatherRepositoryStore> _weatherRepositoryStores;
         private IPreferences _preferences;
         private IGeolocation _geolocation;
+        private IGeocoding _geocoding;
         private IAlertService _alertService;
+        private float _latitude;
+        private float _longitude;
         private string _cityName;
 
         public string CityName
         {
             get => _cityName;
-            set => SetProperty(ref _cityName, value);
+            set
+            {
+                SetProperty(ref _cityName, value);
+                AreCoordinatesUsed = false;
+            }
         }
 
         public DelegateCommand SaveSettingsCommand { get; set; }
+        public DelegateCommand GetLocationCommand { get; set; }
+        public bool AreCoordinatesUsed { get; private set; } = false;
 
-        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService)
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding)
         {
             _weatherRepositoryStores = weatherRepositoryStores;
             _preferences = preferences;
             _geolocation = geolocation;
             _alertService = alertService;
+            _geocoding = geocoding;
             CityName = preferences.Get("CityName", "");
             SaveSettingsCommand = new DelegateCommand(async () => await SaveSettings());
+            GetLocationCommand = new DelegateCommand(async () => await GetLocation());
         }
 
         public async Task SaveSettings()
@@ -62,18 +73,68 @@ namespace WeatherStation.App.ViewModels
             await _alertService.DisplayAlert("Settings Saved", "Settings was saved.");
         }
 
-        public async Task SaveCitySettings()
+        private async Task SaveCitySettings()
         {
             foreach (var repositoryStore in _weatherRepositoryStores)
                 await SaveCitySettingsInRepositoryStore(repositoryStore);
             _preferences.Set("CityName", CityName);
         }
 
-        public async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
+        private async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
         {
             await store.ChangeCity(CityName);
             _preferences.Set($"{store.RepositoryName}CityId", store.CityId);
         }
+
+        public async Task GetLocation()
+        {
+            try
+            {
+                await GetAndSaveLocation();
+            }
+            catch (PermissionException ex)
+            {
+                await _alertService.DisplayAlert("Permissions problem", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                await _alertService.DisplayAlert("Error", ex.Message);
+            }
+
+        }
+
+        private async Task GetAndSaveLocation()
+        {
+            var request = new GeolocationRequest(GeolocationAccuracy.Medium);
+            var location = await _geolocation.GetLocationAsync(request);
+            if (location == null)
+                await _alertService.DisplayAlert("Error", "Location search result was null");
+            else
+                await GetGeolocationDataFromResult(location);
+        }
+
+        private async Task GetGeolocationDataFromResult(Location location)
+        {
+            await GetCoordinatesFromResult(location);
+            await GetCityDataFromResult(location);
+            AreCoordinatesUsed = true;
+        }
+
+        private Task GetCoordinatesFromResult(Location location)
+        {
+            _latitude = (float) location.Latitude;
+            _longitude = (float) location.Longitude;
+            return Task.CompletedTask;
+        }
+
+        private async Task GetCityDataFromResult(Location location)
+        {
+            var placemarks = await _geocoding.GetPlacemarksAsync(location);
+            var locationData = placemarks.FirstOrDefault();
+            if(locationData != null)
+                CityName = $"{locationData.Locality},{locationData.CountryName}";
+        }
+
 
     }
 }

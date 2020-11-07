@@ -68,6 +68,7 @@ namespace WeatherStation.App
         {
             containerRegistry.Register<IPreferences, PreferencesImplementation>();
             containerRegistry.Register<IGeolocation, GeolocationImplementation>();
+            containerRegistry.Register<IGeocoding, GeocodingImplementation>();
         }
 
         private void RegisterAccuWeatherRepository(IContainerRegistry containerRegistry)

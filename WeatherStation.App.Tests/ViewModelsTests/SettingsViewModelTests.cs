@@ -1,10 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extras.Moq;
 using Moq;
 using WeatherStation.App.ViewModels;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories.AccuWeather;
+using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
 
@@ -103,6 +107,93 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             await model.SaveSettings();
 
             mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<string>()),Times.Never);
+        }
+
+        [Fact]
+        public async Task GetLocation_ProperExecution_SetsFlagToTrue()
+        {
+            var mock = await CreateAutoMockWithGeolocation();
+            var model = mock.Create<SettingsViewModel>();
+
+            await model.GetLocation();
+
+            Assert.True(model.AreCoordinatesUsed);
+        }
+
+        private Task<AutoMock> CreateAutoMockWithGeolocation()
+        {
+            var mock = AutoMock.GetLoose();
+            var location = new Location();
+            mock.Mock<IGeolocation>().Setup(x => x.GetLocationAsync(It.IsAny<GeolocationRequest>()))
+                .ReturnsAsync(location);
+            return Task.FromResult(mock);
+        }
+
+        [Fact]
+        public async Task GetLocation_CityNameWasChangedAfterExecution_CoordinatesUsedFlagIsSetToFalse()
+        {
+            var mock = await CreateAutoMockWithGeolocation();
+            var model = mock.Create<SettingsViewModel>();
+            await model.GetLocation();
+
+            model.CityName = "Warsaw";
+
+            Assert.False(model.AreCoordinatesUsed);
+        }
+
+        [Fact]
+        public async Task GetLocation_ProperExecution_ChangesCityName()
+        {
+            var mock = await CreateAutoMockWithGeolocation();
+            var placemark = new Placemark {Locality = "Warsaw", CountryName = "Poland"};
+            var placemarkList = new List<Placemark> {placemark};
+            mock.Mock<IGeocoding>().Setup(x => x.GetPlacemarksAsync(It.IsAny<Location>())).ReturnsAsync(placemarkList);
+            var model = mock.Create<SettingsViewModel>();
+
+            await model.GetLocation();
+
+            var expected = "Warsaw,Poland";
+            var actual = model.CityName;
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task GetLocation_GeolocationMethodReturnsNull_ShowsAlert()
+        {
+            var mock = AutoMock.GetLoose();
+            var model = mock.Create<SettingsViewModel>();
+
+            await model.GetLocation();
+
+            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetLocation_GeolocationThrowsPermissionException_ShowsAlert()
+        {
+            var mock = AutoMock.GetLoose();
+            var exception = new PermissionException("Message");
+            mock.Mock<IGeolocation>().Setup(x => x.GetLocationAsync(It.IsAny<GeolocationRequest>()))
+                .Throws(exception);
+            var model = mock.Create<SettingsViewModel>();
+
+            await model.GetLocation();
+
+            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert("Permissions problem", exception.Message), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetLocation_GeolocationThrowsException_ShowsAlert()
+        {
+            var mock = AutoMock.GetLoose();
+            var exception = new Exception("message");
+            mock.Mock<IGeolocation>().Setup(x => x.GetLocationAsync(It.IsAny<GeolocationRequest>()))
+                .Throws(exception);
+            var model = mock.Create<SettingsViewModel>();
+
+            await model.GetLocation();
+
+            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), exception.Message), Times.Once);
         }
     }
 }
