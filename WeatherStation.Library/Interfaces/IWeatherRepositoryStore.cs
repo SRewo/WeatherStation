@@ -16,6 +16,6 @@ namespace WeatherStation.Library.Interfaces
 
         Task ChangeCity(float latitude, float longitude);
         Task ChangeCity(string cityName);
-        Task ChangeLanguage(Language language);
+        Task ChangeLanguage(string language);
     }
 }

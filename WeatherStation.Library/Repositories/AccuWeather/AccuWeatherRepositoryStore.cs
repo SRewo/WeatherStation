@@ -18,36 +18,36 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         public string CityId { get; set; }
         public string CityName { get; set; }
         public string RepositoryName { get; set; } = "AccuWeather";
-        public Language Language {get; private set; }
-        private string _languageCode;
+        public string Language {get; private set; }
         public IWeatherRepository CurrentWeatherRepository { get; private set; }
         public IWeatherRepository DailyForecastsRepository { get; private set; }
         public IWeatherRepository HistoricalDataRepository { get; private set; }
         public IWeatherRepository HourlyForecastsRepository { get; private set; }
 
 
-        public static async Task<AccuWeatherRepositoryStore> FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient, Language language)
+        public static async Task<AccuWeatherRepositoryStore> FromCityCode(string key, string cityCode, IDateProvider dateProvider, IRestClient restClient, string language)
         {
-            var store = new AccuWeatherRepositoryStore(key, cityCode, dateProvider, restClient);
+            var store = new AccuWeatherRepositoryStore(key, cityCode, dateProvider, restClient, language);
             await store.CreateRepositories(cityCode);
             return store;
         }
 
-        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient, Language language)
+        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient, string language)
         {
-            var store = new AccuWeatherRepositoryStore(key, dateProvider, restClient);
+            var store = new AccuWeatherRepositoryStore(key, dateProvider, restClient,language);
             await store.ChangeCity(cityLatitude, cityLongitude);
             return store;
         }
 
-        private AccuWeatherRepositoryStore(string apiKey, IDateProvider provider, IRestClient restClient)
+        private AccuWeatherRepositoryStore(string apiKey, IDateProvider provider, IRestClient restClient, string language)
         {
             _provider = provider;
             _restClient = restClient;
             _apiKey = apiKey;
+            Language = language;
         }
 
-        private AccuWeatherRepositoryStore(string apiKey, string cityCode, IDateProvider provider, IRestClient restClient) : this(apiKey, provider, restClient)
+        private AccuWeatherRepositoryStore(string apiKey, string cityCode, IDateProvider provider, IRestClient restClient, string language) : this(apiKey, provider, restClient, language)
         {
             CityId = cityCode;
         }
@@ -97,7 +97,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new Parameter("apikey", _apiKey, ParameterType.QueryString),
                 new Parameter("details", false, ParameterType.QueryString),
                 new Parameter("toplevel", true, ParameterType.QueryString),
-                new Parameter("language", _languageCode, ParameterType.QueryString)
+                new Parameter("language", Language, ParameterType.QueryString)
             };
             return parameters;
         }
@@ -153,7 +153,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new Parameter("q", cityName, ParameterType.QueryString),
                 new Parameter("details", false, ParameterType.QueryString),
                 new Parameter("apikey", _apiKey, ParameterType.QueryString),
-                new Parameter("language", _languageCode, ParameterType.QueryString)
+                new Parameter("language", Language, ParameterType.QueryString)
             };
             return parameters;
         }
@@ -177,19 +177,13 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             return false;
         }
 
-        public Task ChangeLanguage(Language language)
+        public Task ChangeLanguage(string language)
         {
-            Language = language;
-            _languageCode = LanguageConverter.ConvertEnumToLanguageCode(language);
-            ChangeLanguageInRepositories(_languageCode);
+            Language = Language;
+            CurrentWeatherRepository.Language = language;
+            DailyForecastsRepository.Language = language;
+            HourlyForecastsRepository.Language = language;
             return Task.CompletedTask;
-        }
-
-        private void ChangeLanguageInRepositories(string languageCode)
-        {
-            CurrentWeatherRepository.Language = languageCode;
-            DailyForecastsRepository.Language = languageCode;
-            HourlyForecastsRepository.Language = languageCode;
         }
     }
 

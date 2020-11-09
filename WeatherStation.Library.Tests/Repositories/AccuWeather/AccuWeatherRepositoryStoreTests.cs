@@ -39,7 +39,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var clientMock = await CreateRestClientMock(jsonResponseFilePath);
             var dateProviderMock = new Mock<IDateProvider>();
-            return await AccuWeatherRepositoryStore.FromCityCode("", "",dateProviderMock.Object,clientMock.Object, Language.English);
+            return await AccuWeatherRepositoryStore.FromCityCode("", "",dateProviderMock.Object,clientMock.Object, "en-US");
         }
 
         private static async Task< Mock<IRestClient>> CreateRestClientMock(string jsonResponseFilePath)
@@ -235,9 +235,9 @@ namespace WeatherStation.Library.Tests.Repositories
         [Fact]
         public async Task ChangeLanguage_ValidExecution_ChangesCurrentWeatherRepositoryLanguageProperty()
         {
-            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, "pl-PL");
 
-            await store.ChangeLanguage(Language.English);
+            await store.ChangeLanguage("en-EN");
 
             var expected = "en-EN";
             var actual = store.CurrentWeatherRepository.Language;
@@ -247,9 +247,9 @@ namespace WeatherStation.Library.Tests.Repositories
         [Fact]
         public async Task ChangeLanguage_ValidExecution_ChangesHourlyForecastsRepositoryLanguageProperty()
         {
-            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, "pl-PL");
 
-            await store.ChangeLanguage(Language.English);
+            await store.ChangeLanguage("en-EN");
 
             var expected = "en-EN";
             var actual = store.HourlyForecastsRepository.Language;
@@ -259,9 +259,9 @@ namespace WeatherStation.Library.Tests.Repositories
         [Fact]
         public async Task ChangeLanguage_ValidExecution_ChangesDailyForecastsRepositoryLanguageProperty()
         {
-            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, Language.Polish);
+            var store = await AccuWeatherRepositoryStore.FromCityCode("", "", null, null, "pl-PL");
 
-            await store.ChangeLanguage(Language.English);
+            await store.ChangeLanguage("en-EN");
 
             var expected = "en-EN";
             var actual = store.DailyForecastsRepository.Language;

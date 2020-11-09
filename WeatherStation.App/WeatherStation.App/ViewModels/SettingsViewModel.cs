@@ -24,8 +24,6 @@ namespace WeatherStation.App.ViewModels
         private float _longitude;
         private string _cityName;
 
-        public Language SelectedLanguage { get; set; }
-
         public string CityName
         {
             get => _cityName;
