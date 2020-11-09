@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -7,6 +8,7 @@ using Autofac.Extras.Moq;
 using Moq;
 using WeatherStation.App.ViewModels;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
@@ -215,5 +217,47 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<float>(), It.IsAny<float>()),Times.Once);
         }
+
+        [Fact]
+        public async Task SaveSettings_SelectedLanguageChanged_ChangesLanguageInRepositories()
+        {
+            var mock = AutoMock.GetLoose();
+            mock.Mock<IPreferences>().Setup(x => x.Get("Language", "")).Returns("en-EN");
+            var model = mock.Create<SettingsViewModel>();
+            model.SelectedLanguage = Language.Polish;
+
+            await model.SaveSettings();
+
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeLanguage(Language.Polish), Times.Once);
+        }
+
+        [Fact]
+        public async Task SaveSettings_SelectedLanguageChanged_SetsLanguageCodeInProperties()
+        {
+            var mock = AutoMock.GetLoose();
+            mock.Mock<IPreferences>().Setup(x => x.Get("Language", "")).Returns("en-EN");
+            var model = mock.Create<SettingsViewModel>();
+            model.SelectedLanguage = Language.Polish;
+
+            await model.SaveSettings();
+
+            mock.Mock<IPreferences>().Verify(x => x.Set("Language", "pl-PL"), Times.Once);
+
+        }
+
+        [Fact]
+        public async Task SaveSettings_SelectedLanguageDidntChange_LanguageInRepositoriesDidntChange()
+        {
+
+            var mock = AutoMock.GetLoose();
+            mock.Mock<IPreferences>().Setup(x => x.Get("Language", "")).Returns("en-EN");
+            var model = mock.Create<SettingsViewModel>();
+            model.SelectedLanguage = Language.English;
+
+            await model.SaveSettings();
+
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeLanguage(Language.English), Times.Never);
+        }
+
     }
 }

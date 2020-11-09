@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Prism.Commands;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
@@ -22,6 +23,8 @@ namespace WeatherStation.App.ViewModels
         private float _latitude;
         private float _longitude;
         private string _cityName;
+
+        public Language SelectedLanguage { get; set; }
 
         public string CityName
         {
