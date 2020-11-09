@@ -7,6 +7,7 @@ using Prism.Navigation;
 using WeatherStation.App.ViewModels;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using Xamarin.Essentials.Interfaces;
 using Xunit;
 
 namespace WeatherStation.App.Tests.ViewModelsTests
@@ -39,7 +40,8 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         private MainPageViewModel CreateViewModel()
         {
             var dateProvider = PrepareDateProvider();
-            return new MainPageViewModel(dateProvider.Object);
+            var preferences = new Mock<IPreferences>();
+            return new MainPageViewModel(dateProvider.Object, preferences.Object);
         }
 
         [Fact]
@@ -88,8 +90,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var dailyRepository = new Mock<IWeatherRepository>();
             repositoryMock.Setup(x => x.DailyForecastsRepository).Returns(dailyRepository.Object);
             var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
-            var dateProvider = PrepareDateProvider();
-            var model = new MainPageViewModel(dateProvider.Object);
+            var model = CreateViewModel();
 
             await model.PerformRequiredTasks(parameters);
 
@@ -103,8 +104,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var hourlyForecasts = new Mock<IWeatherRepository>();
             repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
             var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
-            var dateProvider = PrepareDateProvider();
-            var model = new MainPageViewModel(dateProvider.Object);
+            var model = CreateViewModel();
 
             await model.PerformRequiredTasks(parameters);
 
