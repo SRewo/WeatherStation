@@ -5,17 +5,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mvvm="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:WeatherStation.App.ViewModels;assembly=WeatherStation.App"
+             xmlns:forms="clr-namespace:Microcharts.Forms;assembly=Microcharts.Forms"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
              Title="{Binding CityName}" x:DataType="viewModels:MainPageViewModel">
 
     <AbsoluteLayout>
-        <ScrollView>
+        <ScrollView AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,0,1,1">
             <StackLayout>
                 <Grid Margin="5,5,5,5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="2*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="4*"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -38,10 +40,17 @@
                         <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path=WeatherData.WindSpeed, StringFormat='Wind speed: {0} km/h'}"></Label>
                         <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path=WeatherData.PrecipitationSummary, StringFormat='Precipitation summary: {0} mm'}"></Label>
                     </StackLayout>
+                    <StackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                        <forms:ChartView Chart="{Binding Chart}" HeightRequest="300"/>
+                        <StackLayout Orientation="Horizontal" Padding="0" Spacing="-8">
+                            <Button Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="False" Text="Temperature"/>
+                            <Button Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" Text="Rain chance"/>
+                        </StackLayout>
+                    </StackLayout>
                 </Grid>
             </StackLayout>
         </ScrollView>
-        <Button WidthRequest="20" HeightRequest="20" AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/swap_icon.png">
+        <Button WidthRequest="10" HeightRequest="10" BorderRadius="90"  AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/swap_icon.png">
         </Button>
     </AbsoluteLayout>
 
