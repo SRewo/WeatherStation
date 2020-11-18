@@ -20,6 +20,8 @@ namespace WeatherStation.App.ViewModels
         protected IDateProvider DateProvider;
         private IWeatherRepositoryStore _repositoryStore;
         private IPreferences _preferences;
+        private Chart _dailyTemperatureChart;
+        private Chart _dailyRainChanceChart;
 
 
         private IEnumerable<WeatherData> _weatherDailyData;
@@ -30,11 +32,15 @@ namespace WeatherStation.App.ViewModels
 
         private Chart _chart;
 
+        private bool _isTemperatureChartUsed;
+
         public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences)
         {
             DateProvider = dateProvider;
             _preferences = preferences;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
+            ChangeChartCommand = new DelegateCommand(async () => { await ChangeChart(); });
+
             CityName = _preferences.Get("CityName", "");
         }
 
@@ -53,6 +59,7 @@ namespace WeatherStation.App.ViewModels
         public bool ContainsDailyForecasts { get; set; }
         public bool ContainsHourlyForecasts { get; set; }
         public DelegateCommand GetDataCommand { get; set; }
+        public DelegateCommand ChangeChartCommand { get; set; }
 
         public IEnumerable<WeatherData> WeatherDailyData
         {
@@ -72,6 +79,12 @@ namespace WeatherStation.App.ViewModels
         {
             get => _cityName;
             set => SetProperty(ref _cityName, value);
+        }
+
+        public bool IsTemperatureChartUsed
+        {
+            get => _isTemperatureChartUsed;
+            set => SetProperty(ref _isTemperatureChartUsed, value);
         }
 
         public void OnNavigatedFrom(INavigationParameters parameters)
@@ -135,10 +148,23 @@ namespace WeatherStation.App.ViewModels
             return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
         }
 
+        private Task ChangeChart()
+        {
+            IsTemperatureChartUsed = !_isTemperatureChartUsed;
+            Chart = IsTemperatureChartUsed ? _dailyTemperatureChart : _dailyRainChanceChart;
+
+            return Task.CompletedTask;
+        }
+
         private async Task CreateChart()
         {
             if (ContainsDailyForecasts)
-                Chart = await CreateLinearChart(CreateDailyWeatherDataTemperatureChartEntries());
+            {
+                _dailyTemperatureChart = await CreateLinearChart(CreateDailyWeatherDataTemperatureChartEntries());
+                _dailyRainChanceChart = CreateBarChart(CreateRainChanceChartEntries(WeatherDailyData.AsEnumerable()));
+            }
+
+            Chart = _dailyTemperatureChart;
         }
 
         private Task<LineChart> CreateLinearChart(IEnumerable<ChartEntry> entries)
@@ -156,6 +182,7 @@ namespace WeatherStation.App.ViewModels
                 PointMode = PointMode.Circle,
                 PointSize = 18
             };
+            IsTemperatureChartUsed = true;
             return Task.FromResult(chart);
         }
 
@@ -194,6 +221,49 @@ namespace WeatherStation.App.ViewModels
             if(tempValue > -5)
                 return SKColor.Parse("#1e88e5");
             return SKColor.Parse("#4dd0e1");
+        }
+
+        private Chart CreateBarChart(IEnumerable<ChartEntry> chartEntries)
+        {
+            var chart = new BarChart
+            {
+                Entries = chartEntries,
+                MinValue = 0,
+                MaxValue = 100
+            };
+            return chart;
+        }
+
+        private IEnumerable<ChartEntry> CreateRainChanceChartEntries(IEnumerable<WeatherData> weatherData)
+        {
+            var entries = new List<ChartEntry>();
+            foreach (var data in weatherData)
+                entries.Add(CreateRainChanceChartEntryFromWeatherData(data));
+            return entries;
+        }
+
+        private ChartEntry CreateRainChanceChartEntryFromWeatherData(WeatherData data)
+        {
+            var entry = new ChartEntry(data.ChanceOfRain)
+            {
+                ValueLabel = $"{data.ChanceOfRain}%",
+                Label = data.Date.ToShortDateString(),
+                Color = GetProperColorRelativeToRainChance(data.ChanceOfRain)
+            };
+            return entry;
+        }
+
+        private SKColor GetProperColorRelativeToRainChance(int rainChance)
+        {
+            if(rainChance > 80)
+                return SKColor.Parse("#0d47a1");
+            if(rainChance > 65)
+                return SKColor.Parse("#1976d2");
+            if(rainChance > 50)
+                return SKColor.Parse("#42a5f5");
+            if(rainChance > 40)
+                return SKColor.Parse("#90caf9");
+            return SKColor.Parse("#cfd8dc");
         }
     }
 }

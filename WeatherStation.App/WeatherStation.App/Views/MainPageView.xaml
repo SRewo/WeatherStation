@@ -6,6 +6,7 @@
              xmlns:mvvm="http://prismlibrary.com"
              xmlns:viewModels="clr-namespace:WeatherStation.App.ViewModels;assembly=WeatherStation.App"
              xmlns:forms="clr-namespace:Microcharts.Forms;assembly=Microcharts.Forms"
+             xmlns:converters="clr-namespace:WeatherStation.App.Converters;assembly=WeatherStation.App"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
@@ -41,11 +42,14 @@
                         <Label FontFamily="Roboto" FontSize="20" TextColor="Black" Text="{Binding Path=WeatherData.PrecipitationSummary, StringFormat='Precipitation summary: {0} mm'}"></Label>
                     </StackLayout>
                     <StackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                        <BoxView HeightRequest="0.5" BackgroundColor="Black"/>
+                        <Label Text="Daily Forecasts" FontFamily="Roboto" FontSize="27" HorizontalTextAlignment="Center"></Label>
                         <forms:ChartView Chart="{Binding Chart}" HeightRequest="300"/>
                         <StackLayout Orientation="Horizontal" Padding="0" Spacing="-8">
-                            <Button Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="False" Text="Temperature"/>
-                            <Button Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" Text="Rain chance"/>
+                            <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed, Converter={converters:InverseBoolConverter}}" Text="Temperature"/>
+                            <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed}"  Text="Rain chance"/>
                         </StackLayout>
+                        <BoxView HeightRequest="0.5" BackgroundColor="Black"/>
                     </StackLayout>
                 </Grid>
             </StackLayout>
