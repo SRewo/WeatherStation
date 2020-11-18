@@ -9,6 +9,7 @@ using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
 using SkiaSharp;
+using WeatherStation.App.Converters;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials.Interfaces;
@@ -159,12 +160,30 @@ namespace WeatherStation.App.ViewModels
         private async Task CreateChart()
         {
             if (ContainsDailyForecasts)
-            {
-                _dailyTemperatureChart = await CreateLinearChart(CreateDailyWeatherDataTemperatureChartEntries());
-                _dailyRainChanceChart = CreateBarChart(CreateRainChanceChartEntries(WeatherDailyData.AsEnumerable()));
-            }
+                await CreateChartsForDailyForecasts();
 
             Chart = _dailyTemperatureChart;
+        }
+
+        private async Task CreateChartsForDailyForecasts()
+        {
+            _dailyTemperatureChart = await CreateDailyTemperatureLinearChart();
+
+            _dailyRainChanceChart = await CreateDailyRainChanceBarChart();
+        }
+
+        private Task<LineChart> CreateDailyTemperatureLinearChart()
+        {
+            var converter = new DailyWeatherDataToTemperatureChartEntries();
+            var temperatureChartEntries = converter.ConvertCollection(WeatherDailyData);
+            return CreateLinearChart(temperatureChartEntries);
+        }
+
+        private Task<BarChart> CreateDailyRainChanceBarChart()
+        {
+            var converter = new DailyWeatherDataToRainChanceChartEntries();
+            var chartEntries = converter.ConvertCollection(WeatherDailyData);
+            return CreateBarChart(chartEntries);
         }
 
         private Task<LineChart> CreateLinearChart(IEnumerable<ChartEntry> entries)
@@ -186,84 +205,14 @@ namespace WeatherStation.App.ViewModels
             return Task.FromResult(chart);
         }
 
-        private IEnumerable<ChartEntry> CreateDailyWeatherDataTemperatureChartEntries()
+        private Task<BarChart> CreateBarChart(IEnumerable<ChartEntry> chartEntries)
         {
-            var data = new List<ChartEntry>();
-            foreach (var weatherData in WeatherDailyData)
-                data.Add(WeatherDailyDataTemperatureToChartEntry(weatherData));
-            return data;
-        }
-
-        private ChartEntry WeatherDailyDataTemperatureToChartEntry(WeatherData data)
-        {
-            var entry = new ChartEntry(data.TemperatureMax.Value)
-            {
-                Label = data.Date.ToShortDateString(),
-                ValueLabel = data.TemperatureMax.ToString(),
-                Color = GetProperSKColorAccordingToTemperature(data.TemperatureMax)
-            };
-            return entry;
-        }
-
-        private SKColor GetProperSKColorAccordingToTemperature(Temperature temperature)
-        {
-            var tempValue = temperature.Value;
-            if(tempValue > 35)
-                return SKColor.Parse("#ffee58");
-            if(tempValue > 30)
-                return SKColor.Parse("#f9a825");
-            if(tempValue > 25)
-                return SKColor.Parse("#ef6c00");
-            if(tempValue > 5)
-                return SKColor.Parse("#9e9e9e");
-            if(tempValue > 0)
-                return SKColor.Parse("#1a237e");
-            if(tempValue > -5)
-                return SKColor.Parse("#1e88e5");
-            return SKColor.Parse("#4dd0e1");
-        }
-
-        private Chart CreateBarChart(IEnumerable<ChartEntry> chartEntries)
-        {
-            var chart = new BarChart
+            return Task.FromResult(new BarChart
             {
                 Entries = chartEntries,
                 MinValue = 0,
                 MaxValue = 100
-            };
-            return chart;
-        }
-
-        private IEnumerable<ChartEntry> CreateRainChanceChartEntries(IEnumerable<WeatherData> weatherData)
-        {
-            var entries = new List<ChartEntry>();
-            foreach (var data in weatherData)
-                entries.Add(CreateRainChanceChartEntryFromWeatherData(data));
-            return entries;
-        }
-
-        private ChartEntry CreateRainChanceChartEntryFromWeatherData(WeatherData data)
-        {
-            var entry = new ChartEntry(data.ChanceOfRain)
-            {
-                ValueLabel = $"{data.ChanceOfRain}%",
-                Label = data.Date.ToShortDateString(),
-                Color = GetProperColorRelativeToRainChance(data.ChanceOfRain)
-            };
-            return entry;
-        }
-
-        private SKColor GetProperColorRelativeToRainChance(int rainChance)
-        {
-            if(rainChance > 80)
-                return SKColor.Parse("#0d47a1");
-            if(rainChance > 65)
-                return SKColor.Parse("#1976d2");
-            if(rainChance > 50)
-                return SKColor.Parse("#42a5f5");
-            if(rainChance > 40)
-                return SKColor.Parse("#90caf9");
-            return SKColor.Parse("#cfd8dc");
+            });
         }
     }
 }
