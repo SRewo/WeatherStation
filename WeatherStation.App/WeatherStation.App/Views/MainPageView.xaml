@@ -4,22 +4,21 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mvvm="http://prismlibrary.com"
-             xmlns:viewModels="clr-namespace:WeatherStation.App.ViewModels;assembly=WeatherStation.App"
              xmlns:forms="clr-namespace:Microcharts.Forms;assembly=Microcharts.Forms"
              xmlns:converters="clr-namespace:WeatherStation.App.Converters;assembly=WeatherStation.App"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
-             Title="{Binding CityName}" x:DataType="viewModels:MainPageViewModel">
+             Title="{Binding CityName}">
 
     <AbsoluteLayout>
         <ScrollView AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,0,1,1">
             <StackLayout>
                 <Grid Margin="5,5,5,5">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="2*"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
-                        <RowDefinition Height="4*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -50,6 +49,39 @@
                             <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed}"  Text="Rain chance"/>
                         </StackLayout>
                         <BoxView HeightRequest="0.5" BackgroundColor="Black"/>
+                        <ListView ItemsSource="{Binding Path = WeatherDailyData, Mode=OneWay}" SelectionMode="None" HasUnevenRows="True" IsEnabled="False">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <ViewCell>
+                                        <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="60"/>
+                                            <ColumnDefinition Width="60"/>
+                                            <ColumnDefinition Width="1"/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="40"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="25"/>
+                                            <RowDefinition Height="35"/>
+                                        </Grid.RowDefinitions>
+                                            <Label Grid.Row="0" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMax, StringFormat='{}{0}'}" HorizontalOptions="End"/>
+                                            <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMin}" HorizontalOptions="End"/>
+                                            <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" WidthRequest="1" HeightRequest="20" Margin="0,5,0,5" BackgroundColor="Gray"/>
+                                            <StackLayout Grid.Row="0" Grid.Column="3" >
+                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, StringFormat='{}{0:dd.MM dddd}'}"></Label>
+                                                <BoxView HeightRequest="0.25" Margin="5,0,5,0" Color="Gray"/>
+                                            </StackLayout>
+                                            <Label Grid.Row="1" Grid.Column="3" FontSize="13" FontFamily="Roboto" Text="{Binding WeatherDescription}" VerticalOptions="Start" HorizontalOptions="Center"/>
+                                            <StackLayout Grid.Row="0" Grid.RowSpan="2" Grid.Column="4" Orientation="Horizontal" HorizontalOptions="FillAndExpand">
+                                                <BoxView WidthRequest="1" HeightRequest="20" Margin="0,5,0,5" BackgroundColor="Gray"/>
+                                                <Label FontSize="13" FontFamily="Roboto" Text="{Binding ChanceOfRain, StringFormat='{}{0}%'}" VerticalOptions="Center" HorizontalOptions="End"></Label>
+                                            </StackLayout>
+                                        </Grid>
+                                    </ViewCell>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </StackLayout>
                 </Grid>
             </StackLayout>
