@@ -252,7 +252,10 @@ namespace WeatherStation.App.ViewModels
             {
                 Entries = chartEntries,
                 MinValue = 0,
-                MaxValue = 100
+                MaxValue = 100,
+                ValueLabelOrientation = Orientation.Horizontal,
+                LabelOrientation = Orientation.Horizontal,
+                LabelTextSize = 20
             });
         }
     }
