@@ -23,6 +23,8 @@ namespace WeatherStation.App.ViewModels
         private IPreferences _preferences;
         private Chart _dailyTemperatureChart;
         private Chart _dailyRainChanceChart;
+        private Chart _hourlyTemperatureChart;
+        private Chart _hourlyRainChanceChart;
 
 
         private IEnumerable<WeatherData> _weatherDailyData;
@@ -35,12 +37,15 @@ namespace WeatherStation.App.ViewModels
 
         private bool _isTemperatureChartUsed;
 
+        private bool _areHourlyForecastsSelected;
+
         public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences)
         {
             DateProvider = dateProvider;
             _preferences = preferences;
             GetDataCommand = new DelegateCommand(async () => { await GetData(); });
             ChangeChartCommand = new DelegateCommand(async () => { await ChangeChart(); });
+            ChangeForecastsTypeCommand = new DelegateCommand(async () => { await ChangeForecastsType(); });
 
             CityName = _preferences.Get("CityName", "");
         }
@@ -61,6 +66,8 @@ namespace WeatherStation.App.ViewModels
         public bool ContainsHourlyForecasts { get; set; }
         public DelegateCommand GetDataCommand { get; set; }
         public DelegateCommand ChangeChartCommand { get; set; }
+        public DelegateCommand ChangeForecastsTypeCommand { get; set; }
+        public bool AreBothForecastTypesAvailable { get; set; }
 
         public IEnumerable<WeatherData> WeatherDailyData
         {
@@ -86,6 +93,12 @@ namespace WeatherStation.App.ViewModels
         {
             get => _isTemperatureChartUsed;
             set => SetProperty(ref _isTemperatureChartUsed, value);
+        }
+
+        public bool AreHourlyForecastsSelected
+        {
+            get => _areHourlyForecastsSelected;
+            set => SetProperty(ref _areHourlyForecastsSelected, value);
         }
 
         public void OnNavigatedFrom(INavigationParameters parameters)
@@ -133,6 +146,8 @@ namespace WeatherStation.App.ViewModels
         {
             ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
             ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
+            if (ContainsDailyForecasts && ContainsHourlyForecasts)
+                AreBothForecastTypesAvailable = true;
             return Task.CompletedTask;
         }
 
@@ -141,7 +156,11 @@ namespace WeatherStation.App.ViewModels
             var currentWeather = await _repositoryStore.CurrentWeatherRepository.GetWeatherDataFromRepository();
             WeatherData = currentWeather.First();
             WeatherDailyData = ContainsDailyForecasts
-                ? await _repositoryStore.DailyForecastsRepository.GetWeatherDataFromRepository() : null;
+                ? await _repositoryStore.DailyForecastsRepository.GetWeatherDataFromRepository()
+                : null;
+            WeatherHourlyData = ContainsHourlyForecasts
+                ? await _repositoryStore.HourlyForecastsRepository.GetWeatherDataFromRepository()
+                : null;
         }
 
         private bool IsWeatherDataCurrent()
@@ -149,10 +168,19 @@ namespace WeatherStation.App.ViewModels
             return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
         }
 
+        private async Task ChangeForecastsType()
+        {
+            AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
+            await ChangeChart();
+        }
+
         private Task ChangeChart()
         {
             IsTemperatureChartUsed = !_isTemperatureChartUsed;
-            Chart = IsTemperatureChartUsed ? _dailyTemperatureChart : _dailyRainChanceChart;
+            if(!AreHourlyForecastsSelected)
+                Chart = IsTemperatureChartUsed ? _dailyTemperatureChart : _dailyRainChanceChart;
+            else
+                Chart = IsTemperatureChartUsed ? _hourlyTemperatureChart : _hourlyRainChanceChart;
 
             return Task.CompletedTask;
         }
@@ -162,29 +190,42 @@ namespace WeatherStation.App.ViewModels
             if (ContainsDailyForecasts)
                 await CreateChartsForDailyForecasts();
 
-            Chart = _dailyTemperatureChart;
+            if (ContainsHourlyForecasts)
+                await CreateChartsForHourlyForecasts();
+
+            Chart = ContainsDailyForecasts ? _dailyTemperatureChart : _hourlyRainChanceChart;
         }
 
         private async Task CreateChartsForDailyForecasts()
         {
-            _dailyTemperatureChart = await CreateDailyTemperatureLinearChart();
+            var temperatureConverter = new DailyWeatherDataToTemperatureChartEntries();
+            _dailyTemperatureChart = await CreateTemperatureLinearChart(temperatureConverter, WeatherDailyData);
 
-            _dailyRainChanceChart = await CreateDailyRainChanceBarChart();
+            var rainChanceConverter = new DailyWeatherDataToRainChanceChartEntries();
+            _dailyRainChanceChart = await CreateRainChanceBarChart(rainChanceConverter, WeatherDailyData);
         }
 
-        private Task<LineChart> CreateDailyTemperatureLinearChart()
+        private Task<LineChart> CreateTemperatureLinearChart(WeatherDataToChartEntryConverter converter, IEnumerable<WeatherData> data)
         {
-            var converter = new DailyWeatherDataToTemperatureChartEntries();
-            var temperatureChartEntries = converter.ConvertCollection(WeatherDailyData);
+            var temperatureChartEntries = converter.ConvertCollection(data);
             return CreateLinearChart(temperatureChartEntries);
         }
 
-        private Task<BarChart> CreateDailyRainChanceBarChart()
+        private Task<BarChart> CreateRainChanceBarChart(WeatherDataToChartEntryConverter converter, IEnumerable<WeatherData> data)
         {
-            var converter = new DailyWeatherDataToRainChanceChartEntries();
-            var chartEntries = converter.ConvertCollection(WeatherDailyData);
+            var chartEntries = converter.ConvertCollection(data);
             return CreateBarChart(chartEntries);
         }
+
+        private async Task CreateChartsForHourlyForecasts()
+        {
+            var temperatureConverter = new HourlyWeatherDataToTemperatureChartEntries();
+            _hourlyTemperatureChart = await CreateTemperatureLinearChart(temperatureConverter, WeatherHourlyData);
+
+            var rainChanceConverter = new HourlyWeatherDataToRainChanceChartEntries();
+            _hourlyRainChanceChart = await CreateRainChanceBarChart(rainChanceConverter, WeatherHourlyData);
+        }
+
 
         private Task<LineChart> CreateLinearChart(IEnumerable<ChartEntry> entries)
         {

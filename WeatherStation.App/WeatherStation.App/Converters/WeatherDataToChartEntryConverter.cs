@@ -78,4 +78,30 @@ namespace WeatherStation.App.Converters
             };
         }
     }
+
+    public class HourlyWeatherDataToTemperatureChartEntries : WeatherDataToTemperatureChartEntryConverter
+    {
+        public override ChartEntry Convert(WeatherData weatherData)
+        {
+            return new ChartEntry(weatherData.Temperature.Value)
+            {
+                Label = weatherData.Date.ToShortTimeString(),
+                ValueLabel = weatherData.Temperature.ToString(),
+                Color = GetProperColorRelativeToTemperature(weatherData.Temperature)
+            };
+        }
+    }
+
+    public class HourlyWeatherDataToRainChanceChartEntries : WeatherDataToRainChanceChartEntryConverter
+        {
+            public override ChartEntry Convert(WeatherData weatherData)
+            {
+                return new ChartEntry(weatherData.ChanceOfRain)
+                {
+                    ValueLabel = $"{weatherData.ChanceOfRain}%",
+                    Label = weatherData.Date.ToShortTimeString(),
+                    Color = GetProperColorRelativeToRainChance(weatherData.ChanceOfRain)
+                };
+            }
+        }
 }

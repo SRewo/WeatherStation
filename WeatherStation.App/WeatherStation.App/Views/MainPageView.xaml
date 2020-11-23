@@ -86,7 +86,7 @@
                 </Grid>
             </StackLayout>
         </ScrollView>
-        <Button WidthRequest="10" HeightRequest="10" BorderRadius="90"  AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/swap_icon.png">
+        <Button IsEnabled="{Binding AreBothForecastTypesAvailable}" Command="{Binding ChangeForecastsTypeCommand}"  WidthRequest="10" HeightRequest="10" BorderRadius="90"  AbsoluteLayout.LayoutBounds="0.95,0.95,80,80" AbsoluteLayout.LayoutFlags="PositionProportional" ImageSource="images/swap_icon.png">
         </Button>
     </AbsoluteLayout>
 
