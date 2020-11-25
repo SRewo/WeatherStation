@@ -43,9 +43,10 @@ namespace WeatherStation.App.ViewModels
         {
             DateProvider = dateProvider;
             _preferences = preferences;
-            GetDataCommand = new DelegateCommand(async () => { await GetData(); });
-            ChangeChartCommand = new DelegateCommand(async () => { await ChangeChart(); });
-            ChangeForecastsTypeCommand = new DelegateCommand(async () => { await ChangeForecastsType(); });
+            GetDataCommand = new DelegateCommand(async () => await GetData());
+            ChangeChartCommand = new DelegateCommand(async () => await ChangeChart());
+            ChangeForecastsTypeCommand = new DelegateCommand(async () => await ChangeForecastsType());
+            RefreshDataCommand = new DelegateCommand(async () => await RefreshData());
 
             CityName = _preferences.Get("CityName", "");
         }
@@ -67,6 +68,7 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand GetDataCommand { get; set; }
         public DelegateCommand ChangeChartCommand { get; set; }
         public DelegateCommand ChangeForecastsTypeCommand { get; set; }
+        public DelegateCommand RefreshDataCommand { get; set; }
         public bool AreBothForecastTypesAvailable { get; set; }
 
         public IEnumerable<WeatherData> WeatherDailyData
@@ -121,6 +123,21 @@ namespace WeatherStation.App.ViewModels
         private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
             _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
+            return Task.CompletedTask;
+        }
+
+        private async Task RefreshData()
+        {
+            await ResetWeatherDataFields();
+            await GetData();
+            await CreateChart();
+        }
+
+        private Task ResetWeatherDataFields()
+        {
+            WeatherHourlyData = null;
+            WeatherDailyData = null;
+            WeatherData = null;
             return Task.CompletedTask;
         }
 

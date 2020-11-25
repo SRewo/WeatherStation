@@ -11,6 +11,10 @@
              mvvm:ViewModelLocator.AutowireViewModel="True"
              Title="{Binding CityName}">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="refresh_icon.png" Command="{Binding RefreshDataCommand}" Order="Primary"></ToolbarItem>
+    </ContentPage.ToolbarItems>
+
     <AbsoluteLayout>
         <ScrollView AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,0,1,1">
             <StackLayout>
