@@ -9,7 +9,7 @@ using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
 using SkiaSharp;
-using WeatherStation.App.Converters;
+using WeatherStation.App.Utilities;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials.Interfaces;
@@ -22,10 +22,6 @@ namespace WeatherStation.App.ViewModels
         private IWeatherRepositoryStore _repositoryStore;
         private IPreferences _preferences;
         private Chart _dailyTemperatureChart;
-        private Chart _dailyRainChanceChart;
-        private Chart _hourlyTemperatureChart;
-        private Chart _hourlyRainChanceChart;
-
 
         private IEnumerable<WeatherData> _weatherDailyData;
 
@@ -84,6 +80,9 @@ namespace WeatherStation.App.ViewModels
         }
 
         private string _cityName;
+        private Chart _dailyRainChanceChart;
+        private Chart _hourlyTemperatureChart;
+        private Chart _hourlyRainChanceChart;
 
         public string CityName
         {
@@ -120,7 +119,7 @@ namespace WeatherStation.App.ViewModels
             await CreateChart();
         }
 
-        private Task GetVariablesFromParameters(INavigationParameters parameters)
+        public Task GetVariablesFromParameters(INavigationParameters parameters)
         {
             _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
             return Task.CompletedTask;
@@ -141,7 +140,7 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        private async Task GetData()
+        public async Task GetData()
         {
             try
             {
@@ -159,12 +158,12 @@ namespace WeatherStation.App.ViewModels
                 await DownloadWeatherDataFromRepository();
         }
 
-        private Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
         {
             ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
             ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
-            if (ContainsDailyForecasts && ContainsHourlyForecasts)
-                AreBothForecastTypesAvailable = true;
+            AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
+            AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
             return Task.CompletedTask;
         }
 
@@ -202,7 +201,7 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        private async Task CreateChart()
+        public async Task CreateChart()
         {
             if (ContainsDailyForecasts)
                 await CreateChartsForDailyForecasts();
@@ -211,69 +210,29 @@ namespace WeatherStation.App.ViewModels
                 await CreateChartsForHourlyForecasts();
 
             Chart = ContainsDailyForecasts ? _dailyTemperatureChart : _hourlyRainChanceChart;
-        }
-
-        private async Task CreateChartsForDailyForecasts()
-        {
-            var temperatureConverter = new DailyWeatherDataToTemperatureChartEntries();
-            _dailyTemperatureChart = await CreateTemperatureLinearChart(temperatureConverter, WeatherDailyData);
-
-            var rainChanceConverter = new DailyWeatherDataToRainChanceChartEntries();
-            _dailyRainChanceChart = await CreateRainChanceBarChart(rainChanceConverter, WeatherDailyData);
-        }
-
-        private Task<LineChart> CreateTemperatureLinearChart(WeatherDataToChartEntryConverter converter, IEnumerable<WeatherData> data)
-        {
-            var temperatureChartEntries = converter.ConvertCollection(data);
-            return CreateLinearChart(temperatureChartEntries);
-        }
-
-        private Task<BarChart> CreateRainChanceBarChart(WeatherDataToChartEntryConverter converter, IEnumerable<WeatherData> data)
-        {
-            var chartEntries = converter.ConvertCollection(data);
-            return CreateBarChart(chartEntries);
+            IsTemperatureChartUsed = true;
         }
 
         private async Task CreateChartsForHourlyForecasts()
         {
-            var temperatureConverter = new HourlyWeatherDataToTemperatureChartEntries();
-            _hourlyTemperatureChart = await CreateTemperatureLinearChart(temperatureConverter, WeatherHourlyData);
-
-            var rainChanceConverter = new HourlyWeatherDataToRainChanceChartEntries();
-            _hourlyRainChanceChart = await CreateRainChanceBarChart(rainChanceConverter, WeatherHourlyData);
+            var factory = new MainViewChartFactory();
+            _hourlyRainChanceChart = await factory.CreateChart(
+                new HourlyWeatherDataToRainChanceChartEntries(),
+                WeatherHourlyData);
+            _hourlyTemperatureChart = await factory.CreateChart(
+                new HourlyWeatherDataToTemperatureChartEntries(),
+                WeatherHourlyData);
         }
 
-
-        private Task<LineChart> CreateLinearChart(IEnumerable<ChartEntry> entries)
+        private async Task CreateChartsForDailyForecasts()
         {
-            var chart = new LineChart
-            {
-                Entries = entries,
-                LineMode = LineMode.Straight,
-                ValueLabelOrientation = Orientation.Horizontal,
-                LineAreaAlpha = 0,
-                BackgroundColor = SKColor.Empty,
-                LabelOrientation = Orientation.Horizontal,
-                LabelTextSize = 25,
-                LineSize = 10,
-                PointMode = PointMode.Circle,
-                PointSize = 18
-            };
-            IsTemperatureChartUsed = true;
-            return Task.FromResult(chart);
-        }
-
-        private Task<BarChart> CreateBarChart(IEnumerable<ChartEntry> chartEntries)
-        {
-            return Task.FromResult(new BarChart
-            {
-                Entries = chartEntries,
-                MinValue = 0,
-                MaxValue = 100,
-                ValueLabelOrientation = Orientation.Horizontal,
-                LabelOrientation = Orientation.Horizontal,
-                LabelTextSize = 20
-            });
+            var factory = new MainViewChartFactory();
+            _dailyTemperatureChart = await factory.CreateChart(
+                new DailyWeatherDataToTemperatureChartEntries(),
+                    WeatherDailyData);
+            _dailyRainChanceChart = await factory.CreateChart(
+                new DailyWeatherDataToRainChanceChartEntries(),
+                WeatherDailyData);
         }
     }
 }

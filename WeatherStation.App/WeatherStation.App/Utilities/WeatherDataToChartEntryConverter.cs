@@ -4,7 +4,7 @@ using Microcharts;
 using SkiaSharp;
 using WeatherStation.Library;
 
-namespace WeatherStation.App.Converters
+namespace WeatherStation.App.Utilities
 {
     public abstract class WeatherDataToChartEntryConverter
     {

@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mvvm="http://prismlibrary.com"
              xmlns:forms="clr-namespace:Microcharts.Forms;assembly=Microcharts.Forms"
-             xmlns:converters="clr-namespace:WeatherStation.App.Converters;assembly=WeatherStation.App"
+             xmlns:utilities="clr-namespace:WeatherStation.App.Utilities;assembly=WeatherStation.App"
              mc:Ignorable="d"
              x:Class="WeatherStation.App.MainPageView"
              mvvm:ViewModelLocator.AutowireViewModel="True"
@@ -49,11 +49,11 @@
                         <Label Text="Daily Forecasts" FontFamily="Roboto" FontSize="27" HorizontalTextAlignment="Center"></Label>
                         <forms:ChartView Chart="{Binding Chart}" HeightRequest="300"/>
                         <StackLayout Orientation="Horizontal" Padding="0" Spacing="-8">
-                            <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed, Converter={converters:InverseBoolConverter}}" Text="Temperature"/>
+                            <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed, Converter={utilities:InverseBoolConverter}}" Text="Temperature"/>
                             <Button Command="{Binding ChangeChartCommand}" Margin="0,10,0,10" HeightRequest="40" TextColor="White" BackgroundColor="#dd2c00" FontFamily="Roboto" IsEnabled="{Binding IsTemperatureChartUsed}"  Text="Rain chance"/>
                         </StackLayout>
                         <BoxView HeightRequest="0.5" BackgroundColor="Black"/>
-                        <ListView IsVisible="{Binding AreHourlyForecastsSelected, Converter={converters:InverseBoolConverter}}" ItemsSource="{Binding Path = WeatherDailyData, Mode=OneWay}" SelectionMode="None" HasUnevenRows="True" IsEnabled="False">
+                        <ListView IsVisible="{Binding AreHourlyForecastsSelected, Converter={utilities:InverseBoolConverter}}" ItemsSource="{Binding Path = WeatherDailyData, Mode=OneWay}" SelectionMode="None" HasUnevenRows="True" IsEnabled="False">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <ViewCell>

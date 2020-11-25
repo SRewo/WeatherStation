@@ -2,7 +2,7 @@
 using System.Globalization;
 using Xamarin.Forms;
 
-namespace WeatherStation.App.Converters
+namespace WeatherStation.App.Utilities
 {
     public class InverseBoolConverter : IValueConverter
     {
