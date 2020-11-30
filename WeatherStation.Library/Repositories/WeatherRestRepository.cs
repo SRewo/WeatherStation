@@ -6,22 +6,19 @@ using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories
 {
-    public abstract class WeatherRestRepository : IWeatherRepository
+    public abstract class WeatherRestRepository : RestRepository, IWeatherRepository
     {
         protected string ApiKey { get; }
         public string Language { get; set; }
-        private readonly RestRequestHandler _handler;
 
-        protected WeatherRestRepository(RestRequestHandler handler, string apiKey)
+        protected WeatherRestRepository(IRestClient client, string resourcePath, string apiKey) : base(client, resourcePath)
         {
             ApiKey = apiKey;
-            _handler = handler;
         }
 
         public async Task<IEnumerable<WeatherData>> GetWeatherDataFromRepository()
         {
-            var parameters = CreateRequestParameters();
-            var dynamicResult = await _handler.GetDataFromApi(parameters);
+            var dynamicResult = await GetDataFromApi();
             return CreateWeatherDataListFromResult(dynamicResult);
         }
 
@@ -34,8 +31,6 @@ namespace WeatherStation.Library.Repositories
 
             return list.AsEnumerable();
         }
-
-        protected abstract IEnumerable<Parameter> CreateRequestParameters();
 
         protected abstract WeatherData BuildWeatherDataFromDynamicObject(dynamic dynamicObject);
     }

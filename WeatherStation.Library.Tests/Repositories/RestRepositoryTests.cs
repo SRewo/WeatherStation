@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,16 +9,16 @@ using Xunit;
 
 namespace WeatherStation.Library.Tests.Repositories
 {
-    public class RestRequestHandlerTests
+    public class RestRepositoryTests : RestRepository
     {
         [Fact]
         public async Task GetDataFromApi_WorksProperly()
         {
             var responseMock = CreateResponseMock();
             var clientMock = CreateRestClientMock(responseMock.Object);
-            var handler = new RestRequestHandler(clientMock.Object, "");
+            var handler = new RestRepositoryTests(clientMock.Object, "");
 
-            var result = await handler.GetDataFromApi(new List<Parameter>());
+            var result = await handler.GetDataFromApi();
 
             Assert.NotNull(result);
         }
@@ -47,10 +46,9 @@ namespace WeatherStation.Library.Tests.Repositories
             var responseMock = CreateResponseMock();
             responseMock.Setup(x => x.Content).Returns("");
             var clientMock = CreateRestClientMock(responseMock.Object);
-            var handler = new RestRequestHandler(clientMock.Object, "");
-            var parameters = new List<Parameter>();
+            var handler = new RestRepositoryTests(clientMock.Object, "");
 
-            await Assert.ThrowsAnyAsync<NullReferenceException>(() => handler.GetDataFromApi(parameters));
+            await Assert.ThrowsAnyAsync<NullReferenceException>(() => handler.GetDataFromApi());
 
         }
 
@@ -60,10 +58,24 @@ namespace WeatherStation.Library.Tests.Repositories
             var responseMock = CreateResponseMock();
             responseMock.Setup(x => x.IsSuccessful).Returns(false);
             var clientMock = CreateRestClientMock(responseMock.Object);
-            var handler = new RestRequestHandler(clientMock.Object, "");
-            var parameters = new List<Parameter>();
+            var handler = new RestRepositoryTests(clientMock.Object, "");
 
-            await Assert.ThrowsAnyAsync<HttpRequestException>(() => handler.GetDataFromApi(parameters));
+            await Assert.ThrowsAnyAsync<HttpRequestException>(() => handler.GetDataFromApi());
+        }
+
+        private RestRepositoryTests(IRestClient client, string resourcePath) : base(client, resourcePath)
+        {
+
+        }
+
+        public RestRepositoryTests() : base(null, "")
+        {
+
+        }
+
+        protected override Task AddParametersToRequest(IRestRequest request)
+        {
+            return Task.CompletedTask;
         }
     }
 }

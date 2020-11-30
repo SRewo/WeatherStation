@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
 
@@ -8,8 +9,8 @@ namespace WeatherStation.Library.Repositories.AccuWeather
     {
         private readonly IDateProvider _dateProvider;
 
-        public AccuWeatherCurrentWeatherRepository( RestRequestHandler handler,string apiKey, IDateProvider dateProvider)
-            : base(handler, apiKey)
+        public AccuWeatherCurrentWeatherRepository(IRestClient client, string resourcePath,string apiKey, IDateProvider dateProvider)
+            : base(client, resourcePath, apiKey)
         {
             _dateProvider = dateProvider;
             Language = "pl-PL";
@@ -31,16 +32,13 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             return builder.Build();
 
         }
-        protected override IEnumerable<Parameter> CreateRequestParameters()
+        protected override Task AddParametersToRequest(IRestRequest request)
         {
-            var parameters = new List<Parameter>
-            {
-                new Parameter("apikey", ApiKey, ParameterType.QueryString),
-                new Parameter("details", true, ParameterType.QueryString),
-                new Parameter("metric", true, ParameterType.QueryString),
-                new Parameter("language", Language, ParameterType.QueryString)
-            };
-            return parameters;
+            request.AddParameter("apikey", ApiKey, ParameterType.QueryString);
+            request.AddParameter("details", true, ParameterType.QueryString);
+            request.AddParameter("metric", true, ParameterType.QueryString);
+            request.AddParameter("language", Language, ParameterType.QueryString);
+            return Task.CompletedTask;
         }
 
     }

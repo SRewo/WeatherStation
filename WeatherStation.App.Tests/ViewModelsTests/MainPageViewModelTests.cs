@@ -91,8 +91,9 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             repositoryMock.Setup(x => x.DailyForecastsRepository).Returns(dailyRepository.Object);
             var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
             var model = CreateViewModel();
+            await model.GetVariablesFromParameters(parameters);
 
-            await model.PerformRequiredTasks(parameters);
+            await model.CheckIfRepositoryContainsDailyAndHourlyForecasts();
 
             Assert.True(model.ContainsDailyForecasts);
         }
@@ -105,8 +106,9 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
             var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
             var model = CreateViewModel();
+            await model.GetVariablesFromParameters(parameters);
 
-            await model.PerformRequiredTasks(parameters);
+            await model.CheckIfRepositoryContainsDailyAndHourlyForecasts();
 
             Assert.True(model.ContainsHourlyForecasts);
 

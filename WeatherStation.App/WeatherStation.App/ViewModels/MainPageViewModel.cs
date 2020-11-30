@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Intents;
 using Microcharts;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
-using SkiaSharp;
 using WeatherStation.App.Utilities;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
@@ -215,22 +212,20 @@ namespace WeatherStation.App.ViewModels
 
         private async Task CreateChartsForHourlyForecasts()
         {
-            var factory = new MainViewChartFactory();
-            _hourlyRainChanceChart = await factory.CreateChart(
+            _hourlyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
                 new HourlyWeatherDataToRainChanceChartEntries(),
                 WeatherHourlyData);
-            _hourlyTemperatureChart = await factory.CreateChart(
+            _hourlyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
                 new HourlyWeatherDataToTemperatureChartEntries(),
                 WeatherHourlyData);
         }
 
         private async Task CreateChartsForDailyForecasts()
         {
-            var factory = new MainViewChartFactory();
-            _dailyTemperatureChart = await factory.CreateChart(
+            _dailyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
                 new DailyWeatherDataToTemperatureChartEntries(),
                     WeatherDailyData);
-            _dailyRainChanceChart = await factory.CreateChart(
+            _dailyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
                 new DailyWeatherDataToRainChanceChartEntries(),
                 WeatherDailyData);
         }

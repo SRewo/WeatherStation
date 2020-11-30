@@ -21,21 +21,20 @@ namespace WeatherStation.Library.Tests.Repositories.AccuWeather
         public async Task CurrentWeatherRepository_ProperExecution_ReturnsListWithSingleObject()
         {
             var dateProviderMock = CreateDateProviderMock();
-            var handlerMock = CreateRestRequestHandlerMock("Repositories/TestResponses/AccuWeatherCurrentWeather.json");
-            var repository = new AccuWeatherCurrentWeatherRepository(handlerMock.Object, "", dateProviderMock.Object);
+            var clientMock = await CreateRestClientMock("Repositories/TestResponses/AccuWeatherCurrentWeather.json");
+            var repository = new AccuWeatherCurrentWeatherRepository(clientMock.Object,"", "", dateProviderMock.Object);
 
             var weather = await repository.GetWeatherDataFromRepository();
 
             Assert.Single(weather);
         }
 
-        private Mock<RestRequestHandler> CreateRestRequestHandlerMock(string jsonFileLocation)
+        private async Task<Mock<IRestClient>> CreateRestClientMock(string jsonFileLocation)
         {
             var clientMock = new Mock<IRestClient>();
-            var handlerMock = new Mock<RestRequestHandler>(clientMock.Object, "");
-            var json = LoadJsonResponse(jsonFileLocation);
-            handlerMock.Setup(x => x.GetDataFromApi(It.IsAny<IEnumerable<Parameter>>())).Returns(json);
-            return handlerMock;
+            var responseMock = await CreateResponseMock(jsonFileLocation);
+            clientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), CancellationToken.None)).ReturnsAsync(responseMock.Object);
+            return clientMock;
         }
 
         private static Mock<IDateProvider> CreateDateProviderMock()
@@ -45,18 +44,27 @@ namespace WeatherStation.Library.Tests.Repositories.AccuWeather
             return dateProviderMock;
         }
 
-        private static async Task<dynamic> LoadJsonResponse(string path)
+        private static async Task<Mock<IRestResponse>> CreateResponseMock(string jsonFileLocation)
+        {
+            var mock = new Mock<IRestResponse>();
+            var jsonResult = await LoadJsonResponse(jsonFileLocation);
+            mock.Setup(x => x.Content).Returns(jsonResult);
+            mock.Setup(x => x.IsSuccessful).Returns(true);
+            return mock;
+        }
+
+        private static async Task<string> LoadJsonResponse(string path)
         {
             using var streamReader = new StreamReader(path);
             var result = await streamReader.ReadToEndAsync();
-            return JsonConvert.DeserializeObject(result);
+            return result;
         }
 
         [Fact]
         public async Task HourlyForecastRepository_ProperExecution_ReturnsNotEmptyList()
         {
-            var handlerMock = CreateRestRequestHandlerMock("Repositories/TestResponses/AccuWeatherHourlyForecasts.json");
-            var repository = new AccuWeatherHourlyForecastRepository(handlerMock.Object, "");
+            var clientMock = await CreateRestClientMock("Repositories/TestResponses/AccuWeatherHourlyForecasts.json");
+            var repository = new AccuWeatherHourlyForecastRepository(clientMock.Object, "", "");
 
             var weather = await repository.GetWeatherDataFromRepository();
 
@@ -66,8 +74,8 @@ namespace WeatherStation.Library.Tests.Repositories.AccuWeather
         [Fact]
         public async Task DailyForecastsRepository_ProperExecution_ReturnsNotEmptyList()
         {
-            var handlerMock = CreateRestRequestHandlerMock("Repositories/TestResponses/AccuWeatherDailyForecasts.json");
-            var repository = new AccuWeatherDailyForecastRepository(handlerMock.Object, "");
+            var clientMock = await CreateRestClientMock("Repositories/TestResponses/AccuWeatherDailyForecasts.json");
+            var repository = new AccuWeatherDailyForecastRepository(clientMock.Object, "", "");
 
             var weather = await repository.GetWeatherDataFromRepository();
 
