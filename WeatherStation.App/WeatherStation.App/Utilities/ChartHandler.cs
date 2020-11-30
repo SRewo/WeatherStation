@@ -63,7 +63,7 @@ namespace WeatherStation.App.Utilities
                 LineAreaAlpha = 0,
                 BackgroundColor = SKColor.Empty,
                 LabelOrientation = Orientation.Horizontal,
-                LabelTextSize = 25,
+                LabelTextSize = 20,
                 LineSize = 10,
                 PointMode = PointMode.Circle,
                 PointSize = 18

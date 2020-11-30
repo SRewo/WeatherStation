@@ -5,21 +5,15 @@ using WeatherStation.Library;
 
 namespace WeatherStation.App.Utilities
 {
-    public interface IChartFactory
+    public static class MainViewChartFactory
     {
-        Task<Chart> CreateChart(WeatherDataToRainChanceChartEntryConverter converter, IEnumerable<WeatherData> data);
-        Task<Chart> CreateChart(WeatherDataToTemperatureChartEntryConverter converter, IEnumerable<WeatherData> data);
-    }
-
-    public class MainViewChartFactory : IChartFactory
-    {
-        public async Task<Chart> CreateChart(WeatherDataToRainChanceChartEntryConverter converter, IEnumerable<WeatherData> data)
+        public static async Task<Chart> CreateRainChanceChart(WeatherDataToRainChanceChartEntryConverter converter, IEnumerable<WeatherData> data)
         {
             var chartHandler = new MainViewBarChartHandler(converter);
             return await chartHandler.CreateChart(data);
         }
 
-        public async Task<Chart> CreateChart(WeatherDataToTemperatureChartEntryConverter converter, IEnumerable<WeatherData> data)
+        public static async Task<Chart> CreateTemperatureChart(WeatherDataToTemperatureChartEntryConverter converter, IEnumerable<WeatherData> data)
         {
             var chartHandler = new MainViewLineChartHandler(converter);
             return await chartHandler.CreateChart(data);
