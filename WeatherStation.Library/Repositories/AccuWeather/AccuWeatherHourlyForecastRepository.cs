@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using RestSharp;
 
 namespace WeatherStation.Library.Repositories.AccuWeather
@@ -7,7 +8,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
     public class AccuWeatherHourlyForecastRepository : WeatherRestRepository
     {
 
-        public AccuWeatherHourlyForecastRepository(RestRequestHandler handler, string apiKey) : base(handler, apiKey)
+        public AccuWeatherHourlyForecastRepository(IRestClient client, string resourcePath, string apiKey) : base(client,resourcePath, apiKey)
         {
         }
 
@@ -28,16 +29,13 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             return builder.Build();
         }
 
-        protected override IEnumerable<Parameter> CreateRequestParameters()
+        protected override Task AddParametersToRequest(IRestRequest request)
         {
-            var parameters = new List<Parameter>
-            {
-                new Parameter("apikey", ApiKey, ParameterType.QueryString),
-                new Parameter("details", true, ParameterType.QueryString),
-                new Parameter("metric", true, ParameterType.QueryString),
-                new Parameter("language", Language, ParameterType.QueryString)
-            };
-            return parameters;
+            request.AddParameter("apikey", ApiKey, ParameterType.QueryString);
+            request.AddParameter("details", true, ParameterType.QueryString);
+            request.AddParameter("metric", true, ParameterType.QueryString);
+            request.AddParameter("language", Language, ParameterType.QueryString);
+            return Task.CompletedTask;
         }
     }
 }

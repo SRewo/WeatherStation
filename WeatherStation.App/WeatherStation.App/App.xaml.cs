@@ -9,6 +9,7 @@ using WeatherStation.App.ViewModels;
 using WeatherStation.App.Views;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Implementation;

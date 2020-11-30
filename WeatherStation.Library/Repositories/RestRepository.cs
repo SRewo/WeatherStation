@@ -11,20 +11,20 @@ using RestSharp;
 
 namespace WeatherStation.Library.Repositories
 {
-    public class RestRequestHandler
+    public abstract class RestRepository
     {
         private readonly IRestClient _restClient;
         private readonly string _resourcePath;
 
-        public RestRequestHandler(IRestClient restClient, string resourcePath)
+        protected RestRepository(IRestClient restClient, string resourcePath)
         {
             _restClient = restClient;
             _resourcePath = resourcePath;
         }
 
-        public virtual async Task<dynamic> GetDataFromApi(IEnumerable<Parameter> parameters)
+        protected virtual async Task<dynamic> GetDataFromApi()
         {
-            var query = CreateRestRequest(parameters);
+            var query = await CreateRestRequest();
             var result = await ExecuteRestRequest(query);
             return ConvertRestResultToDynamicObject(result);
         }
@@ -62,12 +62,14 @@ namespace WeatherStation.Library.Repositories
             return result;
         }
 
-        private IRestRequest CreateRestRequest(IEnumerable<Parameter> parameters)
+        private async Task<IRestRequest> CreateRestRequest()
         {
-            var query = new RestRequest(_resourcePath, DataFormat.Json);
-            query.Parameters.AddRange(parameters);
-            return query;
+            var request = new RestRequest(_resourcePath, DataFormat.Json);
+            await AddParametersToRequest(request);
+            return request;
         }
+
+        protected abstract Task AddParametersToRequest(IRestRequest request);
 
     }
 }

@@ -3,6 +3,7 @@ using Prism.Mvvm;
 using Prism.Navigation;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using WeatherStation.App.Views;
 using WeatherStation.Library.Interfaces;
@@ -30,9 +31,9 @@ namespace WeatherStation.App.ViewModels
 
         public DelegateCommand OpenViewCommand { get; set; }
 
-        public MasterPageViewModel(IWeatherRepositoryStore[] weatherRepositories, INavigationService service)
+        public MasterPageViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositories, INavigationService service)
         {
-            _repositories = weatherRepositories;
+            _repositories = weatherRepositories.ToArray();
             _navigationService = service;
             OpenViewCommand = new DelegateCommand(async () => await OpenViewAsync());
             MenuItems = new ObservableCollection<MenuItem>(CreateMenuItems().Result);
@@ -47,6 +48,13 @@ namespace WeatherStation.App.ViewModels
             return collection.ToArray();
         }
 
+        private async Task<IList<MenuItem>> CreateRepositoryMenuItems(IEnumerable<IWeatherRepositoryStore> repositories)
+        {
+            var menuItems = new List<MenuItem>();
+            foreach(var r in repositories) menuItems.Add(await CreateMenuItemFromRepository(r));
+            return menuItems;
+        }
+
         private Task<MenuItem> CreateMenuItemFromRepository(IWeatherRepositoryStore repositoryStore)
         {
             var item = new MenuItem
@@ -56,13 +64,6 @@ namespace WeatherStation.App.ViewModels
                 Parameters = new NavigationParameters {{"repositoryStore", repositoryStore}}
             };
             return Task.FromResult(item);
-        }
-
-        private async Task<IList<MenuItem>> CreateRepositoryMenuItems(IEnumerable<IWeatherRepositoryStore> repositories)
-        {
-            var menuItems = new List<MenuItem>();
-            foreach(var r in repositories) menuItems.Add(await CreateMenuItemFromRepository(r));
-            return menuItems;
         }
 
         private Task<MenuItem> CreateSettingsMenuItem()

@@ -73,7 +73,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         {
             var mock = AutoMock.GetLoose();
             var exceptionMessage = "Invalid city name.";
-            var exception = new InvalidCityNameException(exceptionMessage);
+            var exception = new AccuWeatherCityDataFromCityName.InvalidCityNameException(exceptionMessage);
             mock.Mock<IWeatherRepositoryStore>().Setup(x => x.ChangeCity("Warsaw")).Throws(exception);
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
@@ -88,7 +88,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         {
             var mock = AutoMock.GetLoose();
             var exceptionMessage = "Please provide additional city information.";
-            var exception = new MultipleCitiesResultException(exceptionMessage);
+            var exception = new AccuWeatherCityDataFromCityName.MultipleCitiesResultException(exceptionMessage);
             mock.Mock<IWeatherRepositoryStore>().Setup(x => x.ChangeCity("Warsaw")).Throws(exception);
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";

@@ -56,11 +56,11 @@ namespace WeatherStation.App.ViewModels
             {
                 await Save();
             }
-            catch (InvalidCityNameException ex)
+            catch (AccuWeatherCityDataFromCityName.InvalidCityNameException ex)
             {
                 await _alertService.DisplayAlert("Invalid city name", ex.Message);
             }
-            catch (MultipleCitiesResultException ex)
+            catch (AccuWeatherCityDataFromCityName.MultipleCitiesResultException ex)
             {
                 await _alertService.DisplayAlert("City search returned multiple results", ex.Message);
             }

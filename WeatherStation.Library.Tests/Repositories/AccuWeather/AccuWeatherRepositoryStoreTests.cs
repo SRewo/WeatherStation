@@ -119,7 +119,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await Assert.ThrowsAnyAsync<LatitudeOutOfRangeException>(() => store.ChangeCity(-91f, 21));
+            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LatitudeOutOfRangeException>(() => store.ChangeCity(-91f, 21));
         }
 
         [Fact]
@@ -127,7 +127,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await Assert.ThrowsAnyAsync<LatitudeOutOfRangeException>(() => store.ChangeCity(91f, 21));
+            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LatitudeOutOfRangeException>(() => store.ChangeCity(91f, 21));
         }
 
         [Fact]
@@ -135,7 +135,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await Assert.ThrowsAnyAsync<LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, -181));
+            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, -181));
         }
 
         [Fact]
@@ -143,7 +143,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await Assert.ThrowsAnyAsync<LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, 181));
+            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, 181));
         }
 
         [Fact]
