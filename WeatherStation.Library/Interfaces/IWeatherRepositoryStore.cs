@@ -14,8 +14,7 @@ namespace WeatherStation.Library.Interfaces
         IWeatherRepository HistoricalDataRepository { get; }
         IWeatherRepository HourlyForecastsRepository { get; }
 
-        Task ChangeCity(float latitude, float longitude);
-        Task ChangeCity(string cityName);
+        Task ChangeCity(double latitude, double longitude);
         Task ChangeLanguage(string language);
     }
 }
