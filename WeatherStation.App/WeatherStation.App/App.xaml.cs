@@ -57,6 +57,7 @@ namespace WeatherStation.App
 
         private void RegisterRepositories(IContainerRegistry containerRegistry)
         {
+            RegisterGeocodingRepository(containerRegistry);
             RegisterAccuWeatherRepository(containerRegistry);
         }
 
@@ -76,6 +77,13 @@ namespace WeatherStation.App
                     Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, language).Result);
+        }
+
+        private void RegisterGeocodingRepository(IContainerRegistry containerRegistry)
+        {
+            var geocodingRestClient = new RestClient("http://api.positionstack.com/v1/");
+            containerRegistry.RegisterSingleton(typeof(IGeocodingRepository), 
+                () => new PositionstackGeocodingRepository(geocodingRestClient, AppApiKeys.PositionstackApiKey));
         }
 
         private string GetLanguageCode()
