@@ -26,25 +26,29 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+    <Folder Include="Repositories\Weatherbit\TestResponses\" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Repositories\TestResponses\AccuWeatherCitySearchMultipleCitiesResult.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchMultipleCitiesResult.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Repositories\TestResponses\AccuWeatherCitySearchSingleCityResult.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchSingleCityResult.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Repositories\TestResponses\AccuWeatherCitySearchWithCoordinates.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchWithCoordinates.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Repositories\TestResponses\AccuWeatherCurrentWeather.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCurrentWeather.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Repositories\TestResponses\AccuWeatherDailyForecasts.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherDailyForecasts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Repositories\TestResponses\AccuWeatherHourlyForecasts.json">
+    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherHourlyForecasts.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\Weatherbit\TestResponses\currentWeather.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
