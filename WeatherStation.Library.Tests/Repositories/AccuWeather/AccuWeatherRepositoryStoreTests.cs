@@ -16,13 +16,13 @@ namespace WeatherStation.Library.Tests.Repositories
         private const string WarsawCityCode = "274663";
 
         private const string CoordinatesSearchJsonFilePath =
-            "Repositories/TestResponses/AccuWeatherCitySearchWithCoordinates.json";
+            "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchWithCoordinates.json";
 
         private const string SingleCityResultJsonFilePath =
-            "Repositories/TestResponses/AccuWeatherCitySearchSingleCityResult.json";
+            "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchSingleCityResult.json";
 
         private const string MultipleCitiesResultJsonFilePath =
-            "Repositories/TestResponses/AccuWeatherCitySearchMultipleCitiesResult.json";
+            "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchMultipleCitiesResult.json";
         [Fact]
         public async Task ChangeCity_WithCityCoordinates_SetsCityCode()
         {
@@ -37,35 +37,9 @@ namespace WeatherStation.Library.Tests.Repositories
 
         private static async Task<AccuWeatherRepositoryStore> CreateRepositoryStore(string jsonResponseFilePath)
         {
-            var clientMock = await CreateRestClientMock(jsonResponseFilePath);
+            var clientMock = await CommonMethods.CreateRestClientMock(jsonResponseFilePath);
             var dateProviderMock = new Mock<IDateProvider>();
             return await AccuWeatherRepositoryStore.FromCityCode("", "",dateProviderMock.Object,clientMock.Object, "en-US");
-        }
-
-        private static async Task< Mock<IRestClient>> CreateRestClientMock(string jsonResponseFilePath)
-        {
-
-            var clientMock = new Mock<IRestClient>();
-            var responseMock = await CreateCitySearchResponseMock(jsonResponseFilePath);
-            clientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), CancellationToken.None)).ReturnsAsync(responseMock.Object);
-            return clientMock;
-        }
-
-        private static async Task<Mock<IRestResponse>> CreateCitySearchResponseMock(string filePath)
-        {
-
-            var responseMock = new Mock<IRestResponse>();
-            var result = await LoadJsonResponse(filePath);
-            responseMock.Setup(x => x.Content).Returns(result);
-            responseMock.Setup(x => x.IsSuccessful).Returns(true);
-            return responseMock;
-        }
-
-        private static async Task<string> LoadJsonResponse(string path)
-        {
-            using var streamReader = new StreamReader(path);
-            var result = await streamReader.ReadToEndAsync();
-            return result;
         }
 
         [Fact]
