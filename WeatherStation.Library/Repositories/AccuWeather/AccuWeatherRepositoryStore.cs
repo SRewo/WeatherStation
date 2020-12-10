@@ -64,7 +64,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             await ChangeLanguage(Language);
         }
 
-        public async Task ChangeCity(float latitude, float longitude)
+        public async Task ChangeCity(double latitude, double longitude)
         {
             var repository = new AccuWeatherCityDataFromGeolocation(_restClient, _apiKey, Language);
             var result = await repository.GetCityData(latitude, longitude);
@@ -76,14 +76,6 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         {
             CityId = result.Key;
             CityName = result.LocalizedName;
-        }
-
-        public async Task ChangeCity(string cityName)
-        {
-            var cityRepository = new AccuWeatherCityDataFromCityName(_restClient, _apiKey, Language);
-            var result = await cityRepository.GetCityData(cityName);
-            SetCityDataProperties(result[0]);
-            await CreateRepositories(CityId);
         }
 
         public Task ChangeLanguage(string language)

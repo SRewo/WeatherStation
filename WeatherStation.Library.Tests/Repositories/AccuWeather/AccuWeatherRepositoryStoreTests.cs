@@ -86,7 +86,7 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var currentRepository = store.CurrentWeatherRepository;
 
-            await store.ChangeCity(52.13f, 21);
+            await store.ChangeCity(52.13, 21);
 
             Assert.NotEqual(currentRepository, store.CurrentWeatherRepository);
         }
@@ -97,7 +97,7 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var forecastsRepository = store.HourlyForecastsRepository;
 
-            await store.ChangeCity(52.13f, 21);
+            await store.ChangeCity(52.13, 21);
 
             Assert.NotEqual(forecastsRepository, store.HourlyForecastsRepository);
         }
@@ -108,7 +108,7 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var repositoryBeforeExecution = store.DailyForecastsRepository;
 
-            await store.ChangeCity(52.13f, 21);
+            await store.ChangeCity(52.13, 21);
 
             var repositoryAfterExecution = store.DailyForecastsRepository;
             Assert.NotEqual(repositoryBeforeExecution, repositoryAfterExecution);
@@ -144,92 +144,6 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
             await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, 181));
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_CityNameIsEmpty_ThrowsException()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<Exception>(() => store.ChangeCity(""));
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_SearchReturnsMultipleCities_ThrowsException()
-        {
-            var store = await CreateRepositoryStore(MultipleCitiesResultJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<Exception>(() => store.ChangeCity("Warsaw"));
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_RequestReturnsOnlyOneCity_ChangesCityCode()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-
-            await store.ChangeCity("Warsaw, Poland");
-
-            var expected = WarsawCityCode;
-            var actual = store.CityId;
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_RequestReturnsOnlyOneCity_ChangesCityName()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-
-            await store.ChangeCity("Warsaw,Poland");
-
-            var expected = "Warsaw";
-            var actual = store.CityName;
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_RequestReturnsOnlyOneCity_ChangesCurrentWeatherRepository()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-            var currentRepository = store.CurrentWeatherRepository;
-
-            await store.ChangeCity("Warsaw,Poland");
-
-            Assert.NotEqual(currentRepository, store.CurrentWeatherRepository);
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_RequestReturnsOnlyOneCity_ChangesHourlyForecastsRepository()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-            var forecastsRepository = store.HourlyForecastsRepository;
-
-            await store.ChangeCity("Warsaw,Poland");
-
-            Assert.NotEqual(forecastsRepository, store.HourlyForecastsRepository);
-        }
-
-        [Fact]
-        public async Task ChangeCityWithCityName_RequestReturnsOnlyOneCity_ChangesDailyForecastRepository()
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-            var repositoryBeforeExecution = store.DailyForecastsRepository;
-
-            await store.ChangeCity("Warsaw,Poland");
-
-            var repositoryAfterExecution = store.DailyForecastsRepository;
-            Assert.NotEqual(repositoryBeforeExecution, repositoryAfterExecution);
-        }
-
-        [Theory]
-        [InlineData("W@rsaw")]
-        [InlineData("Warsaw!")]
-        [InlineData("___Warsaw")]
-        [InlineData("#Warsaw")]
-        public async Task ChangeCityWithCityName_CityNameContainsSpecialCharacters_ThrowsException(string cityName)
-        {
-            var store = await CreateRepositoryStore(SingleCityResultJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<Exception>(() => store.ChangeCity(cityName));
         }
 
         [Fact]

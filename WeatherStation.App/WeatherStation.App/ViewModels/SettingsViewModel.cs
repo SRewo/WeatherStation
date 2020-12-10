@@ -19,9 +19,10 @@ namespace WeatherStation.App.ViewModels
         private IPreferences _preferences;
         private IGeolocation _geolocation;
         private IGeocoding _geocoding;
+        private IGeocodingRepository _geocodingRepository;
         private IAlertService _alertService;
-        private float _latitude;
-        private float _longitude;
+        private double _latitude;
+        private double _longitude;
         private string _cityName;
 
         public string CityName
@@ -38,8 +39,9 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand GetLocationCommand { get; set; }
         public bool AreCoordinatesUsed { get; private set; } = false;
 
-        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding)
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository)
         {
+            _geocodingRepository = geocodingRepository;
             _weatherRepositoryStores = weatherRepositoryStores;
             _preferences = preferences;
             _geolocation = geolocation;
@@ -56,13 +58,9 @@ namespace WeatherStation.App.ViewModels
             {
                 await Save();
             }
-            catch (AccuWeatherCityDataFromCityName.InvalidCityNameException ex)
+            catch (Exception ex)
             {
-                await _alertService.DisplayAlert("Invalid city name", ex.Message);
-            }
-            catch (AccuWeatherCityDataFromCityName.MultipleCitiesResultException ex)
-            {
-                await _alertService.DisplayAlert("City search returned multiple results", ex.Message);
+                await _alertService.DisplayAlert("Error", ex.Message);
             }
         }
 
@@ -76,17 +74,25 @@ namespace WeatherStation.App.ViewModels
 
         private async Task SaveCitySettings()
         {
+            if(!AreCoordinatesUsed)
+                await GetCoordinatesFromRepository();
+
             foreach (var repositoryStore in _weatherRepositoryStores)
                 await SaveCitySettingsInRepositoryStore(repositoryStore);
             _preferences.Set("CityName", CityName);
         }
 
+        private async Task GetCoordinatesFromRepository()
+        {
+            var apiResult =  await _geocodingRepository.GetLocationCoordinates(CityName);
+            _latitude = apiResult.Item1;
+            _longitude = apiResult.Item2;
+        }
+
         private async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
         {
-            if (AreCoordinatesUsed)
-                await store.ChangeCity(_latitude, _longitude);
-            else
-                await store.ChangeCity(CityName);
+             await store.ChangeCity(_latitude, _longitude);
+
             _preferences.Set($"{store.RepositoryName}CityId", store.CityId);
         }
 
@@ -126,8 +132,8 @@ namespace WeatherStation.App.ViewModels
 
         private Task GetCoordinatesFromResult(Location location)
         {
-            _latitude = (float) location.Latitude;
-            _longitude = (float) location.Longitude;
+            _latitude = location.Latitude;
+            _longitude = location.Longitude;
             return Task.CompletedTask;
         }
 

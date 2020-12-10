@@ -48,12 +48,13 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         public async Task SaveSettings_ProperExecution_CallsChangeCityMethodInRepositoryStore()
         {
             var mock = AutoMock.GetLoose();
+            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync((12.5,22.2));
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity("Warsaw"), Times.Once);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(12.5,22.2), Times.Once);
         }
 
         [Fact]
@@ -69,36 +70,6 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         }
 
         [Fact]
-        public async Task SaveSettings_ChangeCityThrowsInvalidCityNameException_DisplaysErrorAlert()
-        {
-            var mock = AutoMock.GetLoose();
-            var exceptionMessage = "Invalid city name.";
-            var exception = new AccuWeatherCityDataFromCityName.InvalidCityNameException(exceptionMessage);
-            mock.Mock<IWeatherRepositoryStore>().Setup(x => x.ChangeCity("Warsaw")).Throws(exception);
-            var model = mock.Create<SettingsViewModel>();
-            model.CityName = "Warsaw";
-
-            await model.SaveSettings();
-
-            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), exceptionMessage), Times.Once);
-        }
-
-        [Fact]
-        public async Task SaveSettings_ChangeCityThrowsMultipleCitiesResultException_DisplaysErrorAlert()
-        {
-            var mock = AutoMock.GetLoose();
-            var exceptionMessage = "Please provide additional city information.";
-            var exception = new AccuWeatherCityDataFromCityName.MultipleCitiesResultException(exceptionMessage);
-            mock.Mock<IWeatherRepositoryStore>().Setup(x => x.ChangeCity("Warsaw")).Throws(exception);
-            var model = mock.Create<SettingsViewModel>();
-            model.CityName = "Warsaw";
-
-            await model.SaveSettings();
-
-            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), exceptionMessage), Times.Once);
-        }
-
-        [Fact]
         public async Task SaveSettings_CityNameDidntChange_DoNotChangesCitiesInRepositoryStores()
         {
             var mock = AutoMock.GetLoose();
@@ -108,7 +79,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<string>()),Times.Never);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<double>(), It.IsAny<double>()),Times.Never);
         }
 
         [Fact]
@@ -215,7 +186,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<float>(), It.IsAny<float>()),Times.Once);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<double>(), It.IsAny<double>()),Times.Once);
         }
     }
 }
