@@ -41,7 +41,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
                 .SetPressure((int) o.pres)
                 .SetHumidity((int) o.rh)
                 .SetPrecipitationSummary((float) o.precip)
-                .SetWeatherDescription(o.weather.description);
+                .SetWeatherDescription((string) o.weather.description)
+                .SetWeatherCode((int) o.weather.code);
             return builder.Build();
         }
     }

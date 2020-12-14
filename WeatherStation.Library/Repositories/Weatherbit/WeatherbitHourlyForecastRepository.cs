@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 namespace WeatherStation.Library.Repositories.Weatherbit
 {
-    public class WeatherbitDailyForecastRepository : WeatherRestRepository
-    {
+    public class WeatherbitHourlyForecastRepository : WeatherRestRepository
+    { 
         private (double, double) _coordinates;
-        public WeatherbitDailyForecastRepository(IRestClient restClient, string apiKey, (double,double) coordinates) : base(restClient, "forecast/daily", apiKey)
+
+        public WeatherbitHourlyForecastRepository(IRestClient restClient, string apiKey, (double,double) coordinates) : base(restClient, "forecast/hourly", apiKey)
         {
             _coordinates = coordinates;
         }
@@ -19,6 +20,7 @@ namespace WeatherStation.Library.Repositories.Weatherbit
             request.AddParameter("lang", Language.Remove(2));
             request.AddParameter("lat",_coordinates.Item1);
             request.AddParameter("lon", _coordinates.Item2);
+            request.AddParameter("hours", 24);
             return Task.FromResult(request);
         }
 
@@ -31,14 +33,14 @@ namespace WeatherStation.Library.Repositories.Weatherbit
         protected override WeatherData BuildWeatherDataFromDynamicObject(dynamic dynamicObject)
         {
             var builder = new WeatherDataBuilder();
-            builder.SetMinTemperature((float) dynamicObject.min_temp, TemperatureScale.Celsius)
-                .SetMaxTemperature((float) dynamicObject.max_temp, TemperatureScale.Celsius)
+            builder.SetTemperature((float) dynamicObject.temp, TemperatureScale.Celsius)
+                .SetApparentTemperature((float) dynamicObject.app_temp, TemperatureScale.Celsius)
                 .SetWeatherCode((int) dynamicObject.weather.code)
                 .SetWeatherDescription((string) dynamicObject.weather.description)
                 .SetChanceOfRain((int) dynamicObject.pop)
                 .SetWindSpeed((int) dynamicObject.wind_spd)
                 .SetPressure((int) dynamicObject.pres)
-                .SetDate(DateTime.Parse((string) dynamicObject.datetime));
+                .SetDate((DateTime) dynamicObject.timestamp_local);
             return builder.Build();
 
         }

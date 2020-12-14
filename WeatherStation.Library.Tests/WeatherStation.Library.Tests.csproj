@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="Repositories\Weatherbit\TestResponses\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +51,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Repositories\Weatherbit\TestResponses\dailyWeather.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositories\Weatherbit\TestResponses\hourlyForecasts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
