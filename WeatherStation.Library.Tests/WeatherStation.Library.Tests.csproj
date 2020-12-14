@@ -51,6 +51,9 @@
     <None Update="Repositories\Weatherbit\TestResponses\currentWeather.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Repositories\Weatherbit\TestResponses\dailyWeather.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
