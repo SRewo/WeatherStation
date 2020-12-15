@@ -122,14 +122,35 @@ namespace WeatherStation.Library.Tests
         }
 
         [Fact]
-        public void SetWindSpeed_ProperlySetsValue()
+        public void SetWindSpeed_KilometersPerHour_ProperlySetsValue()
         {
             var builder = new WeatherDataBuilder();
             var windSpeed = 10;
-            builder.SetWindSpeed(windSpeed);
+            builder.SetWindSpeed(windSpeed, WindSpeedUnit.KilometersPerHour);
+
             var data = builder.Build();
 
             Assert.Equal(windSpeed, data.WindSpeed);
+        }
+
+        [Fact]
+        public void SetWindSpeed_MetersPerSecond_ProperlySetsValue()
+        {
+            var builder = new WeatherDataBuilder();
+
+            var data = builder.SetWindSpeed(10,WindSpeedUnit.MetersPerSecond).Build();
+
+            Assert.Equal(36, data.WindSpeed);
+        }
+
+        [Fact]
+        public void SetWindSpeed_MilesPerHour_ProperlySetsValue()
+        {
+            var builder = new WeatherDataBuilder();
+
+            var data = builder.SetWindSpeed(10, WindSpeedUnit.MilesPerHour).Build();
+
+            Assert.Equal(16.09f,data.WindSpeed);
         }
 
         [Theory]
@@ -140,7 +161,7 @@ namespace WeatherStation.Library.Tests
         {
             var builder = new WeatherDataBuilder();
 
-            Assert.ThrowsAny<InvalidOperationException>(() => builder.SetWindSpeed(value));
+            Assert.ThrowsAny<InvalidOperationException>(() => builder.SetWindSpeed(value, WindSpeedUnit.KilometersPerHour));
         }
 
         [Fact]

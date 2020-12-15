@@ -2,6 +2,12 @@
 
 namespace WeatherStation.Library
 {
+    public enum WindSpeedUnit
+    {
+        KilometersPerHour,
+        MetersPerSecond,
+        MilesPerHour
+    }
     public sealed class WeatherDataBuilder : FunctionalBuilder<WeatherData, WeatherDataBuilder>
     {
         public WeatherDataBuilder SetDate(DateTime date)
@@ -48,12 +54,22 @@ namespace WeatherStation.Library
             return Do(x => x.Humidity = value);
         }
 
-        public WeatherDataBuilder SetWindSpeed(float value)
+        public WeatherDataBuilder SetWindSpeed(float value, WindSpeedUnit unit)
         {
             if (value < 0)
                 throw new InvalidOperationException("Wind speed cannot be smaller than 0");
 
-            return Do(x => x.WindSpeed = value);
+            switch (unit)
+            {
+                case WindSpeedUnit.KilometersPerHour:
+                    return Do(x => x.WindSpeed = value);
+                case WindSpeedUnit.MetersPerSecond:
+                    return Do(x => x.WindSpeed = value*3.6f);
+                case WindSpeedUnit.MilesPerHour:
+                    return Do(x => x.WindSpeed = value*1.609f);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(unit),unit,$"Windspeed unit {unit} is not yet implemented");
+            }
         }
 
         public WeatherDataBuilder SetWindDirection(int value)

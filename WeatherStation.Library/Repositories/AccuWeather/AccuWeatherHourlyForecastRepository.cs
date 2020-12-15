@@ -21,7 +21,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 .SetApparentTemperature((float) o.RealFeelTemperature.Value, TemperatureScale.Celsius)
                 .SetHumidity((int) o.RelativeHumidity)
                 .SetWindDirection((int) o.Wind.Direction.Degrees)
-                .SetWindSpeed((float) o.Wind.Speed.Value)
+                .SetWindSpeed((float) o.Wind.Speed.Value, WindSpeedUnit.KilometersPerHour)
                 .SetChanceOfRain((int) o.PrecipitationProbability)
                 .SetPrecipitationSummary((float) o.TotalLiquid.Value)
                 .SetWeatherCode((int) o.WeatherIcon)

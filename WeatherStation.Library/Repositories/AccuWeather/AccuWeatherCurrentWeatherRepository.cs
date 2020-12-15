@@ -23,7 +23,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 .SetApparentTemperature((float) dynamicObject.RealFeelTemperature.Metric.Value, TemperatureScale.Celsius)
                 .SetHumidity((int) dynamicObject.RelativeHumidity)
                 .SetWindDirection((int) dynamicObject.Wind.Direction.Degrees)
-                .SetWindSpeed((float) dynamicObject.Wind.Speed.Metric.Value)
+                .SetWindSpeed((float) dynamicObject.Wind.Speed.Metric.Value, WindSpeedUnit.KilometersPerHour)
                 .SetPressure((int) dynamicObject.Pressure.Metric.Value)
                 .SetPrecipitationSummary((float) dynamicObject.PrecipitationSummary.Precipitation.Metric.Value)
                 .SetWeatherCode((int) dynamicObject.WeatherIcon)

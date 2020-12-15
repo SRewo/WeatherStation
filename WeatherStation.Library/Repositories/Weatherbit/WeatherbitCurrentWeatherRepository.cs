@@ -1,5 +1,6 @@
 ﻿using RestSharp;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using WeatherStation.Library.Interfaces;
 
@@ -9,7 +10,7 @@ namespace WeatherStation.Library.Repositories.Weatherbit
     {
         private (double, double) _coordinates;
         private IDateProvider _dateProvider;
-        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, (double, double) coordinates, IDateProvider dateProvider) : base(client, "current", apiKey)
+        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, (double, double) coordinates, IDateProvider dateProvider) : base(client, "current/", apiKey)
         {
             _coordinates = coordinates;
             _dateProvider = dateProvider;
@@ -17,10 +18,10 @@ namespace WeatherStation.Library.Repositories.Weatherbit
 
         protected override Task AddParametersToRequest(IRestRequest request)
         {
-            request.AddParameter("key", ApiKey);
-            request.AddParameter("lang", Language.Remove(2));
-            request.AddParameter("lat",_coordinates.Item1);
-            request.AddParameter("lon", _coordinates.Item2);
+            request.AddParameter("key", ApiKey, ParameterType.QueryString);
+            request.AddParameter("lang", Language.Remove(2), ParameterType.QueryString);
+            request.AddParameter("lat",_coordinates.Item1.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Item2.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
             return Task.FromResult(request);
         }
 
@@ -37,8 +38,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
                 .SetTemperature((float) o.temp, TemperatureScale.Celsius)
                 .SetApparentTemperature((float) o.app_temp, TemperatureScale.Celsius)
                 .SetWindDirection((int) o.wind_dir)
-                .SetWindSpeed((float) o.wind_spd)
-                .SetPressure((int) o.pres)
+                .SetWindSpeed((float) o.wind_spd, WindSpeedUnit.MetersPerSecond)
+                .SetPressure((int) o.slp)
                 .SetHumidity((int) o.rh)
                 .SetPrecipitationSummary((float) o.precip)
                 .SetWeatherDescription((string) o.weather.description)

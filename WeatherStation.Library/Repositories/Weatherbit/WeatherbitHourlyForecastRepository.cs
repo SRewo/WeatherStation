@@ -1,6 +1,7 @@
 ﻿using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace WeatherStation.Library.Repositories.Weatherbit
@@ -16,11 +17,11 @@ namespace WeatherStation.Library.Repositories.Weatherbit
 
         protected override Task AddParametersToRequest(IRestRequest request)
         {
-            request.AddParameter("key", ApiKey);
-            request.AddParameter("lang", Language.Remove(2));
-            request.AddParameter("lat",_coordinates.Item1);
-            request.AddParameter("lon", _coordinates.Item2);
-            request.AddParameter("hours", 24);
+            request.AddParameter("key", ApiKey, ParameterType.QueryString);
+            request.AddParameter("lang", Language.Remove(2), ParameterType.QueryString);
+            request.AddParameter("lat",_coordinates.Item1.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Item2.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("hours", 24,ParameterType.QueryString);
             return Task.FromResult(request);
         }
 
@@ -38,8 +39,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
                 .SetWeatherCode((int) dynamicObject.weather.code)
                 .SetWeatherDescription((string) dynamicObject.weather.description)
                 .SetChanceOfRain((int) dynamicObject.pop)
-                .SetWindSpeed((int) dynamicObject.wind_spd)
-                .SetPressure((int) dynamicObject.pres)
+                .SetWindSpeed((float) dynamicObject.wind_spd, WindSpeedUnit.MetersPerSecond)
+                .SetPressure((int) dynamicObject.slp)
                 .SetDate((DateTime) dynamicObject.timestamp_local);
             return builder.Build();
 
