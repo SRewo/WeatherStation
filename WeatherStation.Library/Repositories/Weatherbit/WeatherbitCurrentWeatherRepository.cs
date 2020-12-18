@@ -8,9 +8,9 @@ namespace WeatherStation.Library.Repositories.Weatherbit
 {
     public class WeatherbitCurrentWeatherRepository : WeatherRestRepository 
     {
-        private (double, double) _coordinates;
+        private Coordinates _coordinates;
         private IDateProvider _dateProvider;
-        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, (double, double) coordinates, IDateProvider dateProvider) : base(client, "current/", apiKey)
+        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, Coordinates coordinates, IDateProvider dateProvider) : base(client, "current/", apiKey)
         {
             _coordinates = coordinates;
             _dateProvider = dateProvider;
@@ -20,8 +20,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
         {
             request.AddParameter("key", ApiKey, ParameterType.QueryString);
             request.AddParameter("lang", Language.Remove(2), ParameterType.QueryString);
-            request.AddParameter("lat",_coordinates.Item1.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
-            request.AddParameter("lon", _coordinates.Item2.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lat",_coordinates.Latitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Longitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
             return Task.FromResult(request);
         }
 

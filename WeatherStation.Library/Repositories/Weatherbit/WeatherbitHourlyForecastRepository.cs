@@ -8,9 +8,9 @@ namespace WeatherStation.Library.Repositories.Weatherbit
 {
     public class WeatherbitHourlyForecastRepository : WeatherRestRepository
     { 
-        private (double, double) _coordinates;
+        private Coordinates _coordinates;
 
-        public WeatherbitHourlyForecastRepository(IRestClient restClient, string apiKey, (double,double) coordinates) : base(restClient, "forecast/hourly", apiKey)
+        public WeatherbitHourlyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates) : base(restClient, "forecast/hourly", apiKey)
         {
             _coordinates = coordinates;
         }
@@ -19,8 +19,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
         {
             request.AddParameter("key", ApiKey, ParameterType.QueryString);
             request.AddParameter("lang", Language.Remove(2), ParameterType.QueryString);
-            request.AddParameter("lat",_coordinates.Item1.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
-            request.AddParameter("lon", _coordinates.Item2.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lat",_coordinates.Latitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Longitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
             request.AddParameter("hours", 24,ParameterType.QueryString);
             return Task.FromResult(request);
         }

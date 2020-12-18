@@ -2,12 +2,9 @@
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories.Weatherbit;
 using Xunit;
 
@@ -31,7 +28,7 @@ namespace WeatherStation.Library.Tests.Repositories.Weatherbit
         {
             var client = await CommonMethods.CreateRestClientMock(currentWeatherJsonPath);
             var dateProvider = CommonMethods.CreateDateProviderMock();
-            var repository = new WeatherbitCurrentWeatherRepository(client.Object, "",(0,0), dateProvider.Object);
+            var repository = new WeatherbitCurrentWeatherRepository(client.Object, "",new Coordinates(0,0), dateProvider.Object);
             repository.Language = "pl-PL";
             return (repository, client);
         }

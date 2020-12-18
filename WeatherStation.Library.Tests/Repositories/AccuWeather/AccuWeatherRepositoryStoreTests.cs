@@ -1,11 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Moq;
-using RestSharp;
 using WeatherStation.Library.Interfaces;
-using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using Xunit;
 
@@ -18,17 +13,14 @@ namespace WeatherStation.Library.Tests.Repositories
         private const string CoordinatesSearchJsonFilePath =
             "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchWithCoordinates.json";
 
-        private const string SingleCityResultJsonFilePath =
-            "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchSingleCityResult.json";
+        private Coordinates _coordinates = new Coordinates(10,21);
 
-        private const string MultipleCitiesResultJsonFilePath =
-            "Repositories/AccuWeather/TestResponses/AccuWeatherCitySearchMultipleCitiesResult.json";
         [Fact]
         public async Task ChangeCity_WithCityCoordinates_SetsCityCode()
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await store.ChangeCity(52.13f, 21f);
+            await store.ChangeCity(_coordinates);
 
             var expected = WarsawCityCode;
             var actual = store.CityId;
@@ -47,7 +39,7 @@ namespace WeatherStation.Library.Tests.Repositories
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
 
-            await store.ChangeCity(52.13f, 21);
+            await store.ChangeCity(_coordinates);
 
             var expected = "Warsaw";
             var actual = store.CityName;
@@ -60,7 +52,7 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var currentRepository = store.CurrentWeatherRepository;
 
-            await store.ChangeCity(52.13, 21);
+            await store.ChangeCity(_coordinates);
 
             Assert.NotEqual(currentRepository, store.CurrentWeatherRepository);
         }
@@ -71,7 +63,7 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var forecastsRepository = store.HourlyForecastsRepository;
 
-            await store.ChangeCity(52.13, 21);
+            await store.ChangeCity(_coordinates);
 
             Assert.NotEqual(forecastsRepository, store.HourlyForecastsRepository);
         }
@@ -82,42 +74,20 @@ namespace WeatherStation.Library.Tests.Repositories
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
             var repositoryBeforeExecution = store.DailyForecastsRepository;
 
-            await store.ChangeCity(52.13, 21);
+            await store.ChangeCity(_coordinates);
 
             var repositoryAfterExecution = store.DailyForecastsRepository;
             Assert.NotEqual(repositoryBeforeExecution, repositoryAfterExecution);
         }
 
         [Fact]
-        public async Task ChangeCity_LatitudeTooSmall_ThrowsException()
+        public async Task ChangeCity_CoordinatesAreNotValid_ThrowsException()
         {
             var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
+            var mock = new Mock<Coordinates>(10,10);
+            mock.Setup(x => x.IsValid()).Returns(false);
 
-            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LatitudeOutOfRangeException>(() => store.ChangeCity(-91f, 21));
-        }
-
-        [Fact]
-        public async Task ChangeCity_LatitudeTooBig_ThrowsException()
-        {
-            var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LatitudeOutOfRangeException>(() => store.ChangeCity(91f, 21));
-        }
-
-        [Fact]
-        public async Task ChangeCity_LongitudeTooSmall_ThrowsException()
-        {
-            var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, -181));
-        }
-
-        [Fact]
-        public async Task ChangeCity_LongitudeTooBig_ThrowsException()
-        {
-            var store = await CreateRepositoryStore(CoordinatesSearchJsonFilePath);
-
-            await Assert.ThrowsAnyAsync<AccuWeatherCityDataFromGeolocation.LongitudeOutOfRangeException>(() => store.ChangeCity(52.13f, 181));
+            await Assert.ThrowsAnyAsync<InvalidCoordinatesException>(() => store.ChangeCity(mock.Object));
         }
 
         [Fact]

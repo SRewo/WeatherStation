@@ -2,14 +2,12 @@
 using Prism.Mvvm;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Prism.Commands;
 using WeatherStation.Library.Interfaces;
-using WeatherStation.Library.Repositories;
-using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
+using WeatherStation.Library;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -69,7 +67,15 @@ namespace WeatherStation.App.ViewModels
             var currentCity = _preferences.Get("CityName", "");
             if(CityName != currentCity)
                 await SaveCitySettings();
+            
             await _alertService.DisplayAlert("Settings Saved", "Settings was saved.");
+            SaveCoordinatesInPreferences();
+        }
+
+        private void SaveCoordinatesInPreferences()
+        {
+            Preferences.Set("lat", _latitude);
+            Preferences.Set("lon", _longitude);
         }
 
         private async Task SaveCitySettings()
@@ -85,13 +91,13 @@ namespace WeatherStation.App.ViewModels
         private async Task GetCoordinatesFromRepository()
         {
             var apiResult =  await _geocodingRepository.GetLocationCoordinates(CityName);
-            _latitude = apiResult.Item1;
-            _longitude = apiResult.Item2;
+            _latitude = apiResult.Latitude;
+            _longitude = apiResult.Longitude;
         }
 
         private async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
         {
-             await store.ChangeCity(_latitude, _longitude);
+             await store.ChangeCity(new Coordinates(_latitude, _longitude));
 
             _preferences.Set($"{store.RepositoryName}CityId", store.CityId);
         }
@@ -121,6 +127,8 @@ namespace WeatherStation.App.ViewModels
                 await _alertService.DisplayAlert("Error", "Location search result was null");
             else
                 await GetGeolocationDataFromResult(location);
+
+            SaveCoordinatesInPreferences();
         }
 
         private async Task GetGeolocationDataFromResult(Location location)

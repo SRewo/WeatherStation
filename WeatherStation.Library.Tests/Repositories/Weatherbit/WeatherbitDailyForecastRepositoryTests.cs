@@ -1,9 +1,6 @@
 ﻿using Moq;
 using RestSharp;
-using System;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using WeatherStation.Library.Repositories.Weatherbit;
 using Xunit;
@@ -27,7 +24,7 @@ namespace WeatherStation.Library.Tests.Repositories.Weatherbit
         private async Task<(WeatherbitDailyForecastRepository, Mock<IRestClient>)> CreateTestClasses()
         {
             var client = await CommonMethods.CreateRestClientMock(_testResponseLocation);
-            var repository = new WeatherbitDailyForecastRepository(client.Object,"", (0,0));
+            var repository = new WeatherbitDailyForecastRepository(client.Object,"", new Coordinates(0,0));
             repository.Language = "pl-PL";
             return (repository, client);
         }

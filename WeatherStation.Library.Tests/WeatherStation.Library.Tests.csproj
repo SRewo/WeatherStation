@@ -29,12 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchMultipleCitiesResult.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchSingleCityResult.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Repositories\AccuWeather\TestResponses\AccuWeatherCitySearchWithCoordinates.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

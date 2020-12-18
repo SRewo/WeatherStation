@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using RestSharp;
 using WeatherStation.Library.Interfaces;
 
@@ -32,10 +26,10 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             return store;
         }
 
-        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, float cityLatitude, float cityLongitude, IDateProvider dateProvider, IRestClient restClient, string language)
+        public static async Task<AccuWeatherRepositoryStore> FromCityCoordinates(string key, Coordinates coordinates, IDateProvider dateProvider, IRestClient restClient, string language)
         {
             var store = new AccuWeatherRepositoryStore(key, dateProvider, restClient,language);
-            await store.ChangeCity(cityLatitude, cityLongitude);
+            await store.ChangeCity(coordinates);
             return store;
         }
 
@@ -64,10 +58,10 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             await ChangeLanguage(Language);
         }
 
-        public async Task ChangeCity(double latitude, double longitude)
+        public async Task ChangeCity(Coordinates coordinates)
         {
             var repository = new AccuWeatherCityDataFromGeolocation(_restClient, _apiKey, Language);
-            var result = await repository.GetCityData(latitude, longitude);
+            var result = await repository.GetCityData(coordinates);
             SetCityDataProperties(result);
             await CreateRepositories(CityId);
         }

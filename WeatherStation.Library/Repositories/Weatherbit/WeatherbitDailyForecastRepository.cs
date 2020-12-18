@@ -8,8 +8,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
 {
     public class WeatherbitDailyForecastRepository : WeatherRestRepository
     {
-        private (double, double) _coordinates;
-        public WeatherbitDailyForecastRepository(IRestClient restClient, string apiKey, (double,double) coordinates) : base(restClient, "forecast/daily", apiKey)
+        private Coordinates _coordinates;
+        public WeatherbitDailyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates) : base(restClient, "forecast/daily", apiKey)
         {
             _coordinates = coordinates;
         }
@@ -18,8 +18,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
         {
             request.AddParameter("key", ApiKey, ParameterType.QueryString);
             request.AddParameter("lang", Language.Remove(2), ParameterType.QueryString);
-            request.AddParameter("lat",_coordinates.Item1.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
-            request.AddParameter("lon", _coordinates.Item2.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lat",_coordinates.Latitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Longitude.ToString(CultureInfo.InvariantCulture), ParameterType.QueryString);
             return Task.FromResult(request);
         }
 
