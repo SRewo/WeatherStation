@@ -10,7 +10,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         private readonly IDateProvider _dateProvider;
 
         public AccuWeatherCurrentWeatherRepository(IRestClient client, string resourcePath,string apiKey, IDateProvider dateProvider)
-            : base(client, resourcePath, apiKey)
+            : base(client, resourcePath, apiKey, dateProvider)
         {
             _dateProvider = dateProvider;
             Language = "pl-PL";

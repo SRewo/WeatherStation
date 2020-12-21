@@ -23,8 +23,9 @@ namespace WeatherStation.Library.Tests.Repositories.AccuWeather
         [Fact]
         public async Task HourlyForecastRepository_ProperExecution_ReturnsNotEmptyList()
         {
+            var dateProviderMock = CommonMethods.CreateDateProviderMock();
             var clientMock = await CommonMethods.CreateRestClientMock("Repositories/AccuWeather/TestResponses/AccuWeatherHourlyForecasts.json");
-            var repository = new AccuWeatherHourlyForecastRepository(clientMock.Object, "", "");
+            var repository = new AccuWeatherHourlyForecastRepository(clientMock.Object, "", "", dateProviderMock.Object);
 
             var weather = await repository.GetWeatherDataFromRepository();
 
@@ -34,8 +35,9 @@ namespace WeatherStation.Library.Tests.Repositories.AccuWeather
         [Fact]
         public async Task DailyForecastsRepository_ProperExecution_ReturnsNotEmptyList()
         {
+            var dateProviderMock = CommonMethods.CreateDateProviderMock();
             var clientMock = await CommonMethods.CreateRestClientMock("Repositories/AccuWeather/TestResponses/AccuWeatherDailyForecasts.json");
-            var repository = new AccuWeatherDailyForecastRepository(clientMock.Object, "", "");
+            var repository = new AccuWeatherDailyForecastRepository(clientMock.Object, "", "", dateProviderMock.Object);
 
             var weather = await repository.GetWeatherDataFromRepository();
 

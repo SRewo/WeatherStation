@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories.Weatherbit
 {
@@ -10,7 +11,7 @@ namespace WeatherStation.Library.Repositories.Weatherbit
     { 
         private Coordinates _coordinates;
 
-        public WeatherbitHourlyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates) : base(restClient, "forecast/hourly", apiKey)
+        public WeatherbitHourlyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates, IDateProvider dateProvider) : base(restClient, "forecast/hourly", apiKey, dateProvider)
         {
             _coordinates = coordinates;
         }

@@ -112,7 +112,7 @@ namespace WeatherStation.App
 
         private Task<INavigationResult> NavigateToMainView()
         {
-            var parameters = new NavigationParameters {{"repositoryStore", Container.Resolve<IWeatherRepositoryStore>("Weatherbit")}};
+            var parameters = new NavigationParameters {{"repositoryStore", Container.Resolve<IWeatherRepositoryStore>("Accuweather")}};
             return NavigationService.NavigateAsync("DetailPageView/NavigationPage/MainPageView", parameters);
         }
 

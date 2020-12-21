@@ -52,9 +52,9 @@ namespace WeatherStation.Library.Repositories.AccuWeather
             CurrentWeatherRepository =
                 new AccuWeatherCurrentWeatherRepository(_restClient,$"currentconditions/v1/{cityCode}", _apiKey, _provider);
             HourlyForecastsRepository =
-                new AccuWeatherHourlyForecastRepository(_restClient,$"forecasts/v1/hourly/12hour/{cityCode}", _apiKey);
+                new AccuWeatherHourlyForecastRepository(_restClient,$"forecasts/v1/hourly/12hour/{cityCode}", _apiKey, _provider);
             DailyForecastsRepository =
-                new AccuWeatherDailyForecastRepository(_restClient, $"forecasts/v1/daily/5day/{cityCode}", _apiKey);
+                new AccuWeatherDailyForecastRepository(_restClient, $"forecasts/v1/daily/5day/{cityCode}", _apiKey, _provider);
             await ChangeLanguage(Language);
         }
 

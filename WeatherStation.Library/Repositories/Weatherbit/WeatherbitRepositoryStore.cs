@@ -37,8 +37,8 @@ namespace WeatherStation.Library.Repositories.Weatherbit
                 throw new InvalidCoordinatesException();
 
             CurrentWeatherRepository = new WeatherbitCurrentWeatherRepository(_restClient, _apiKey, coordinates, _dateProvider);
-            DailyForecastsRepository = new WeatherbitDailyForecastRepository(_restClient, _apiKey, coordinates);
-            HourlyForecastsRepository = new WeatherbitHourlyForecastRepository(_restClient, _apiKey, coordinates);
+            DailyForecastsRepository = new WeatherbitDailyForecastRepository(_restClient, _apiKey, coordinates, _dateProvider);
+            HourlyForecastsRepository = new WeatherbitHourlyForecastRepository(_restClient, _apiKey, coordinates, _dateProvider);
             HistoricalDataRepository = null;
             ChangeLanguage(Language);
         }

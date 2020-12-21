@@ -10,7 +10,7 @@ namespace WeatherStation.Library.Repositories.Weatherbit
     {
         private Coordinates _coordinates;
         private IDateProvider _dateProvider;
-        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, Coordinates coordinates, IDateProvider dateProvider) : base(client, "current/", apiKey)
+        public WeatherbitCurrentWeatherRepository(IRestClient client, string apiKey, Coordinates coordinates, IDateProvider dateProvider) : base(client, "current/", apiKey, dateProvider)
         {
             _coordinates = coordinates;
             _dateProvider = dateProvider;

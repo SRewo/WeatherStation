@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories.Weatherbit
 {
     public class WeatherbitDailyForecastRepository : WeatherRestRepository
     {
         private Coordinates _coordinates;
-        public WeatherbitDailyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates) : base(restClient, "forecast/daily", apiKey)
+        public WeatherbitDailyForecastRepository(IRestClient restClient, string apiKey, Coordinates coordinates, IDateProvider dateProvider) : base(restClient, "forecast/daily", apiKey, dateProvider)
         {
             _coordinates = coordinates;
         }

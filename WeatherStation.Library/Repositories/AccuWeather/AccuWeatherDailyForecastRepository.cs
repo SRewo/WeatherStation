@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RestSharp;
+using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories.AccuWeather
 {
     public class AccuWeatherDailyForecastRepository : WeatherRestRepository
     {
-        public AccuWeatherDailyForecastRepository(IRestClient client, string resourcePath, string apiKey) : base(client, resourcePath, apiKey)
+        public AccuWeatherDailyForecastRepository(IRestClient client, string resourcePath, string apiKey, IDateProvider dateProvider) : base(client, resourcePath, apiKey, dateProvider)
         {
         }
 

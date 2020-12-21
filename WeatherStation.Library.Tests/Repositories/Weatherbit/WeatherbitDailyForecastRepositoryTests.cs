@@ -23,8 +23,9 @@ namespace WeatherStation.Library.Tests.Repositories.Weatherbit
 
         private async Task<(WeatherbitDailyForecastRepository, Mock<IRestClient>)> CreateTestClasses()
         {
+            var dateProviderMock = CommonMethods.CreateDateProviderMock();
             var client = await CommonMethods.CreateRestClientMock(_testResponseLocation);
-            var repository = new WeatherbitDailyForecastRepository(client.Object,"", new Coordinates(0,0));
+            var repository = new WeatherbitDailyForecastRepository(client.Object,"", new Coordinates(0,0), dateProviderMock.Object);
             repository.Language = "pl-PL";
             return (repository, client);
         }
