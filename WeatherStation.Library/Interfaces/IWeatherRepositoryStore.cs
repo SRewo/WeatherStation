@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using WeatherStation.Library.Repositories;
 
 namespace WeatherStation.Library.Interfaces
 {
@@ -14,7 +13,7 @@ namespace WeatherStation.Library.Interfaces
         IWeatherRepository HistoricalDataRepository { get; }
         IWeatherRepository HourlyForecastsRepository { get; }
 
-        Task ChangeCity(double latitude, double longitude);
+        Task ChangeCity(Coordinates coordinates);
         Task ChangeLanguage(string language);
     }
 }

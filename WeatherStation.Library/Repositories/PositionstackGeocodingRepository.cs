@@ -14,7 +14,7 @@ namespace WeatherStation.Library.Repositories
             _apiKey = apiKey;
         }
 
-        public async Task<(double, double)> GetLocationCoordinates(string locationData)
+        public async Task<Coordinates> GetLocationCoordinates(string locationData)
         {
             if(string.IsNullOrWhiteSpace(locationData))
                 throw new NoLocationDataException("No location data was provided for coordinates search.");
@@ -22,7 +22,7 @@ namespace WeatherStation.Library.Repositories
             _locationData = locationData;
             var data = await GetDataFromApi();
             var result = data.data[0];
-            return (result.latitude, result.longitude);
+            return new Coordinates(result.latitude, result.longitude);
         }
 
         protected override Task AddParametersToRequest(IRestRequest request)
@@ -34,8 +34,5 @@ namespace WeatherStation.Library.Repositories
         }
     }
 
-    public class NoLocationDataException : Exception
-    {
-        public NoLocationDataException(string message) : base(message) { }
-    }
+
 }

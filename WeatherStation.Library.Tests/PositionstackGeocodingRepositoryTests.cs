@@ -17,7 +17,7 @@ namespace WeatherStation.Library.Tests
 
             var result = await repository.GetLocationCoordinates("Pszczyna");
 
-            Assert.Equal(42.32, result.Item1);
+            Assert.Equal(42.32, result.Latitude);
         }
 
         private Mock<IRestClient> CreateRestClientMock()
@@ -49,7 +49,7 @@ namespace WeatherStation.Library.Tests
 
             var result = await repository.GetLocationCoordinates("Pszczyna");
 
-            Assert.Equal(33.22, result.Item2);
+            Assert.Equal(33.22, result.Longitude);
         }
 
         [Fact]

@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
 using Autofac.Extras.Moq;
 using Moq;
 using WeatherStation.App.ViewModels;
+using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
-using WeatherStation.Library.Repositories;
-using WeatherStation.Library.Repositories.AccuWeather;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
@@ -24,6 +20,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var mock = AutoMock.GetLoose();
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
+            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync(new Coordinates(10,10));
 
             await model.SaveSettings();
 
@@ -38,6 +35,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             mock.Mock<IWeatherRepositoryStore>().Setup(x => x.RepositoryName).Returns("AccuWeather");
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
+            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync(new Coordinates(10,10));
 
             await model.SaveSettings();
 
@@ -48,13 +46,14 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         public async Task SaveSettings_ProperExecution_CallsChangeCityMethodInRepositoryStore()
         {
             var mock = AutoMock.GetLoose();
-            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync((12.5,22.2));
+            var coordinates = new Coordinates(12.5,22.2);
+            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync(coordinates);
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(12.5,22.2), Times.Once);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<Coordinates>()), Times.Once);
         }
 
         [Fact]
@@ -63,6 +62,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var mock = AutoMock.GetLoose();
             var model = mock.Create<SettingsViewModel>();
             model.CityName = "Warsaw";
+            mock.Mock<IGeocodingRepository>().Setup(x => x.GetLocationCoordinates("Warsaw")).ReturnsAsync(new Coordinates(10,10));
 
             await model.SaveSettings();
 
@@ -79,7 +79,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<double>(), It.IsAny<double>()),Times.Never);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<Coordinates>()),Times.Never);
         }
 
         [Fact]
@@ -145,7 +145,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.GetLocation();
 
-            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), It.IsAny<string>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -186,7 +186,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.SaveSettings();
 
-            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<double>(), It.IsAny<double>()),Times.Once);
+            mock.Mock<IWeatherRepositoryStore>().Verify(x => x.ChangeCity(It.IsAny<Coordinates>()),Times.Once);
         }
     }
 }
