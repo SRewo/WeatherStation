@@ -2,19 +2,19 @@ using System;
 using System.Threading.Tasks;
 
 namespace WeatherStation.App{
-    public interface IErrorHandlingService{
-        Task HandleError(Exception ex);
+    public interface IExceptionHandlingService{
+        Task HandleException(Exception ex);
     }
 
-    public class ErrorHandlingService : IErrorHandlingService
+    public class ExceptionHandlingService : IExceptionHandlingService
     {
         private IErrorAlertService _alertService;
 
-        public ErrorHandlingService(IErrorAlertService alertService)
+        public ExceptionHandlingService(IErrorAlertService alertService)
         {
             _alertService = alertService;
         }
-        public Task HandleError(Exception ex)
+        public Task HandleException(Exception ex)
         {
             return _alertService.DisplayExceptionMessage(ex);
         }

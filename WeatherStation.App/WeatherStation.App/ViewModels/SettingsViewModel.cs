@@ -19,6 +19,7 @@ namespace WeatherStation.App.ViewModels
         private IGeocoding _geocoding;
         private IGeocodingRepository _geocodingRepository;
         private IAlertService _alertService;
+        private IExceptionHandlingService _handlingService;
         private double _latitude;
         private double _longitude;
         private string _cityName;
@@ -37,8 +38,9 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand GetLocationCommand { get; set; }
         public bool AreCoordinatesUsed { get; private set; } = false;
 
-        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository)
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository, IExceptionHandlingService service)
         {
+            _handlingService = service;
             _geocodingRepository = geocodingRepository;
             _weatherRepositoryStores = weatherRepositoryStores;
             _preferences = preferences;
@@ -58,7 +60,7 @@ namespace WeatherStation.App.ViewModels
             }
             catch (Exception ex)
             {
-                await _alertService.DisplayAlert("Error", ex.Message);
+                await _handlingService.HandleException(ex);
             }
         }
 
@@ -114,7 +116,7 @@ namespace WeatherStation.App.ViewModels
             }
             catch (Exception ex)
             {
-                await _alertService.DisplayAlert("Error", ex.Message);
+                await _handlingService.HandleException(ex);
             }
 
         }

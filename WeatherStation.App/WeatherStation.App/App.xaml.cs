@@ -1,6 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Threading.Tasks;
-using Foundation;
 using Prism;
 using Prism.Ioc;
 using Prism.Navigation;
@@ -33,6 +33,14 @@ namespace WeatherStation.App
 
         protected override void OnStart()
         {
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEvent;
+        }
+
+        private static void UnhandledExceptionEvent(object sender, UnhandledExceptionEventArgs args)
+        {
+            var exception = (Exception) sender;
+            var service = App.Current.Container.Resolve<IExceptionHandlingService>();
+            service.HandleException(exception);
         }
 
         protected override void OnSleep()
@@ -43,9 +51,16 @@ namespace WeatherStation.App
         {
             containerRegistry.Register<IDateProvider, DateProvider>();
             containerRegistry.Register<IAlertService, AlertService>();
+            RegisterExceptionHandlingServices(containerRegistry);
             RegisterXamarinEssentialsTypes(containerRegistry);
             RegisterRepositories(containerRegistry);
             RegisterViewsForNavigation(containerRegistry);
+        }
+
+        private void RegisterExceptionHandlingServices(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.Register<IErrorAlertService, ErrorAlertService>();
+            containerRegistry.Register<IExceptionHandlingService, ExceptionHandlingService>();
         }
 
         private void RegisterViewsForNavigation(IContainerRegistry containerRegistry)
@@ -101,7 +116,7 @@ namespace WeatherStation.App
 
         private string GetLanguageCode()
         {
-            return DeviceInfo.Platform.Equals(DevicePlatform.Android) ? CultureInfo.CurrentUICulture.IetfLanguageTag : NSLocale.PreferredLanguages[0];
+            return DeviceInfo.Platform.Equals(DevicePlatform.Android) ? CultureInfo.CurrentUICulture.IetfLanguageTag : "PL";
         }
 
         protected override async void OnInitialized()

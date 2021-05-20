@@ -163,7 +163,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         }
 
         [Fact]
-        public async Task GetLocation_GeolocationThrowsException_ShowsAlert()
+        public async Task GetLocation_GeolocationThrowsException_HandlesException()
         {
             var mock = AutoMock.GetLoose();
             var exception = new Exception("message");
@@ -173,7 +173,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.GetLocation();
 
-            mock.Mock<IAlertService>().Verify(x => x.DisplayAlert(It.IsAny<string>(), exception.Message), Times.Once);
+            mock.Mock<IExceptionHandlingService>().Verify(x => x.HandleException(exception), Times.Once);
         }
 
         [Fact]

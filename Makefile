@@ -1,8 +1,8 @@
-testlib:
+testLib:
 	dotnet test "WeatherStation.Library.Tests/WeatherStation.Library.Tests.csproj"
-testapp:
+testApp:
 	dotnet test "WeatherStation.App.Tests/WeatherStation.App.Tests.csproj"
-testall:
+testAll:
 	dotnet test
 buildApp:
 	msbuild "WeatherStation.App/WeatherStation.App.Android/WeatherStation.App.Android.csproj" /t:SignAndroidPackage
