@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace WeatherStation.App
+namespace WeatherStation.App.Utilities
 {
     public interface IAlertService
     {

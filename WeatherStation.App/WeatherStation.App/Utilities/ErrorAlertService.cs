@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace WeatherStation.App {
+namespace WeatherStation.App.Utilities {
     public interface IErrorAlertService : IAlertService{
         Task DisplayExceptionMessage(Exception ex);
     }
