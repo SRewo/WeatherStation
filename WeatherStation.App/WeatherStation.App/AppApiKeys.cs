@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WeatherStation.App
+﻿namespace WeatherStation.App
 {
     internal static partial class AppApiKeys
     {

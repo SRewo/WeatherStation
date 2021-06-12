@@ -34,9 +34,10 @@ namespace WeatherStation.App.ViewModels
 
         private string _forecastsTitle;
 
-        public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences)
+        public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service)
         {
             DateProvider = dateProvider;
+            _handlingService = service;
             _preferences = preferences;
             GetDataCommand = new DelegateCommand(async () => await GetData());
             ChangeChartCommand = new DelegateCommand(async () => await ChangeChart());
@@ -82,6 +83,7 @@ namespace WeatherStation.App.ViewModels
         private Chart _dailyRainChanceChart;
         private Chart _hourlyTemperatureChart;
         private Chart _hourlyRainChanceChart;
+        private IExceptionHandlingService _handlingService;
 
         public string CityName
         {
@@ -118,6 +120,18 @@ namespace WeatherStation.App.ViewModels
 
         public async Task PerformRequiredTasks(INavigationParameters parameters)
         {
+            try
+            {
+                await PerformRequiredTasksOnViewLoad(parameters);
+            }
+            catch(Exception ex)
+            {
+                await _handlingService.HandleException(ex);
+            }
+        }
+
+        private async Task PerformRequiredTasksOnViewLoad(INavigationParameters parameters)
+        {
             await GetVariablesFromParameters(parameters);
             await CheckIfRepositoryContainsDailyAndHourlyForecasts();
             await GetData();
@@ -125,7 +139,7 @@ namespace WeatherStation.App.ViewModels
             await ChangeTitle();
         }
 
-        public Task GetVariablesFromParameters(INavigationParameters parameters)
+        private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
             _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
             return Task.CompletedTask;
@@ -133,9 +147,21 @@ namespace WeatherStation.App.ViewModels
 
         private async Task RefreshData()
         {
-            await ResetWeatherDataFields();
-            await GetData();
-            await CreateChart();
+            try
+            {
+                await RefreshViewData();
+            }
+            catch(Exception ex)
+            {
+                await _handlingService.HandleException(ex);
+            }
+        }
+
+        private async Task RefreshViewData()
+        {
+                await ResetWeatherDataFields();
+                await GetData();
+                await CreateChart();
         }
 
         private Task ResetWeatherDataFields()
@@ -146,19 +172,7 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        public async Task GetData()
-        {
-            try
-            {
-                await GetDataIfNotCurrent();
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine(ex.Message);
-            }
-        }
-
-        private async Task GetDataIfNotCurrent()
+        private async Task GetData()
         {
             if (!IsWeatherDataCurrent())
                 await DownloadWeatherDataFromRepository();
@@ -187,6 +201,7 @@ namespace WeatherStation.App.ViewModels
             ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
             AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
             AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
+
             return Task.CompletedTask;
         }
 

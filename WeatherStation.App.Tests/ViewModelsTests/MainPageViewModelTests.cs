@@ -7,6 +7,7 @@ using Prism.Navigation;
 using WeatherStation.App.ViewModels;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.App.Utilities;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
 
@@ -41,7 +42,14 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         {
             var dateProvider = PrepareDateProvider();
             var preferences = new Mock<IPreferences>();
-            return new MainPageViewModel(dateProvider.Object, preferences.Object);
+            var handler = new Mock<IExceptionHandlingService>();
+            return new MainPageViewModel(dateProvider.Object, preferences.Object, handler.Object);
+        }
+        private MainPageViewModel CreateViewModel(Mock<IExceptionHandlingService> serviceMock)
+        {
+            var dateProvider = PrepareDateProvider();
+            var preferences = new Mock<IPreferences>();
+            return new MainPageViewModel(dateProvider.Object, preferences.Object, serviceMock.Object);
         }
 
         [Fact]
@@ -101,7 +109,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         [Fact]
         public async Task PerformRequiredTasks_RepositoryContainsHourlyForecasts_SetsPropertyToTrue()
         {
-             var repositoryMock = new Mock<IWeatherRepositoryStore>();
+            var repositoryMock = new Mock<IWeatherRepositoryStore>();
             var hourlyForecasts = new Mock<IWeatherRepository>();
             repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
             var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
@@ -120,6 +128,22 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             var hourlyRepositoryMock = new Mock<IWeatherRepository>();
             repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyRepositoryMock.Object);
             return repositoryMock;
+        }
+
+        [Fact]
+        public async Task PerformRequiredTasks_ThrowsException_ExceptionHandled()
+        {
+            var repositoryMock = new Mock<IWeatherRepositoryStore>();
+            var hourlyForecasts = new Mock<IWeatherRepository>();
+            hourlyForecasts.Setup(x => x.GetWeatherDataFromRepository()).Throws(new Exception());
+            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
+            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
+            var serviceMock = new Mock<IExceptionHandlingService>();
+            var model = CreateViewModel(serviceMock);
+
+            await model.PerformRequiredTasks(parameters);
+
+            serviceMock.Verify(x => x.HandleException(It.IsAny<Exception>()));
         }
 
     }

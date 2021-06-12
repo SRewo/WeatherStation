@@ -350,3 +350,5 @@ MigrationBackup/
 .ionide/
 
 /WeatherStation.App/WeatherStation.App/LocalApiKeys.cs
+.vscode/
+.idea/
