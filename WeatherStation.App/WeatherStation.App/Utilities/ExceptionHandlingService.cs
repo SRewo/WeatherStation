@@ -27,13 +27,13 @@ namespace WeatherStation.App.Utilities{
 
         private Task HandleNull()
         {
-            _logger.Log("Unknown Error");
+            _logger.Log("Unknown Error \n");
             return _alertService.DisplayAlert("Unknown Error", "Unknown Error");
         }
 
         private Task HandleExceptionObject(Exception ex)
         {
-            _logger.Log(ex.ToString());
+            _logger.Log(ex.ToString() + "\n");
             return _alertService.DisplayExceptionMessage(ex);
         }
 

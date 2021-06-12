@@ -122,11 +122,7 @@ namespace WeatherStation.App.ViewModels
         {
             try
             {
-                await GetVariablesFromParameters(parameters);
-                await CheckIfRepositoryContainsDailyAndHourlyForecasts();
-                await GetData();
-                await CreateChart();
-                await ChangeTitle();
+                await PerformRequiredTasksOnViewLoad(parameters);
             }
             catch(Exception ex)
             {
@@ -134,7 +130,16 @@ namespace WeatherStation.App.ViewModels
             }
         }
 
-        public Task GetVariablesFromParameters(INavigationParameters parameters)
+        private async Task PerformRequiredTasksOnViewLoad(INavigationParameters parameters)
+        {
+            await GetVariablesFromParameters(parameters);
+            await CheckIfRepositoryContainsDailyAndHourlyForecasts();
+            await GetData();
+            await CreateChart();
+            await ChangeTitle();
+        }
+
+        private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
             _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
             return Task.CompletedTask;
@@ -144,14 +149,19 @@ namespace WeatherStation.App.ViewModels
         {
             try
             {
-                await ResetWeatherDataFields();
-                await GetData();
-                await CreateChart();
+                await RefreshViewData();
             }
             catch(Exception ex)
             {
                 await _handlingService.HandleException(ex);
             }
+        }
+
+        private async Task RefreshViewData()
+        {
+                await ResetWeatherDataFields();
+                await GetData();
+                await CreateChart();
         }
 
         private Task ResetWeatherDataFields()
@@ -191,6 +201,7 @@ namespace WeatherStation.App.ViewModels
             ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
             AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
             AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
+
             return Task.CompletedTask;
         }
 

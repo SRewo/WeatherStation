@@ -9,6 +9,7 @@ using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
+using WeatherStation.App.Utilities;
 
 namespace WeatherStation.App.Tests.ViewModelsTests
 {

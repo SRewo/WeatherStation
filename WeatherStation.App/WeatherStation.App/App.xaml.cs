@@ -17,6 +17,7 @@ using Xamarin.Essentials.Implementation;
 using Xamarin.Essentials.Interfaces;
 using Xamarin.Forms;
 using DeviceInfo = Xamarin.Essentials.DeviceInfo;
+using WeatherStation.App.Utilities;
 
 namespace WeatherStation.App
 {
@@ -31,16 +32,24 @@ namespace WeatherStation.App
 
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
-            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEvent;
+            await Permissions.RequestAsync<Permissions.StorageWrite>();
+            await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+
+            await LogAppStarting();
         }
 
-        private static void UnhandledExceptionEvent(object sender, UnhandledExceptionEventArgs args)
+        private async Task LogAppStarting()
         {
-            var exception = (Exception) sender;
-            var service = App.Current.Container.Resolve<IExceptionHandlingService>();
-            service.HandleException(exception);
+            try
+            {
+                await App.Current.Container.Resolve<ILogger>().Log("App Started");
+            }
+            catch(Exception ex)
+            {
+                await App.Current.Container.Resolve<ExceptionHandlingService>().HandleException(ex);
+            }
         }
 
         protected override void OnSleep()
@@ -59,6 +68,14 @@ namespace WeatherStation.App
 
         private void RegisterExceptionHandlingServices(IContainerRegistry containerRegistry)
         {
+            containerRegistry.Register<System.IO.Abstractions.IFileSystem,System.IO.Abstractions.FileSystem>();
+
+            containerRegistry.RegisterInstance<IWriteService>(new TxtWriteService(
+                App.Current.Container.Resolve<System.IO.Abstractions.IFileSystem>(),
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                $"Log-{DateTime.Now.ToString("g")}"));
+
+            containerRegistry.Register<ILogger, Logger>();
             containerRegistry.Register<IErrorAlertService, ErrorAlertService>();
             containerRegistry.Register<IExceptionHandlingService, ExceptionHandlingService>();
         }
@@ -90,7 +107,7 @@ namespace WeatherStation.App
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             var language = GetLanguageCode();
             containerRegistry.RegisterInstance<IWeatherRepositoryStore>(
-                  AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
+                AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
                     Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, language).Result, "Accuweather");

@@ -8,6 +8,7 @@ using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
 using WeatherStation.Library;
+using WeatherStation.App.Utilities;
 
 namespace WeatherStation.App.ViewModels
 {

@@ -19,11 +19,10 @@ namespace WeatherStation.App.Utilities
 			_dateProvider = dateProvider;
 		}
 
-		public Task Log(string message)
+		public async Task Log(string message)
 		{
-			string date = _dateProvider.GetActualDateTime().ToString("g");
-			_service.WriteFromString($"{date}: {message}");
-			return Task.CompletedTask;
+			string date = _dateProvider.GetActualDateTime().ToString("dd.MM.yyyy hh:mm:ss");
+			await _service.WriteFromString($"{date}: {message}\n");
 		}
 	}
 }

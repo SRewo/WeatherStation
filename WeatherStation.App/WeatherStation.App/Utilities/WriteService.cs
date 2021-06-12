@@ -32,8 +32,8 @@ namespace WeatherStation.App.Utilities{
         }
         public Task CreateFile()
         {
-           _fileSystem.File.Create(_filePath);
-           return Task.CompletedTask;
+            _fileSystem.File.Create(_filePath).Close();
+            return Task.CompletedTask;
         }
     }
 }

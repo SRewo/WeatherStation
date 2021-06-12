@@ -7,6 +7,7 @@ using Prism.Navigation;
 using WeatherStation.App.ViewModels;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
+using WeatherStation.App.Utilities;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
 
