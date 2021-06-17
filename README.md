@@ -44,4 +44,3 @@ All used API keys are stored in static partial class AppApiKeys, which has to be
 * [Positionstack](https://positionstack.com/)
 ### Weather
 * [AccuWeather](https://developer.accuweather.com/)
-* [Weatherbit](https://www.weatherbit.io/)
