@@ -47,7 +47,7 @@ namespace WeatherStation.App.Tests.UtilitiesTests
 
             await handler.HandleException(null);
 
-            mocks.logger.Verify(x => x.Log("Unknown Error"), Times.Once);
+            mocks.logger.Verify(x => x.Log("Unknown Error \n"), Times.Once);
         }
 
         [Fact]

@@ -11,7 +11,6 @@ using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
-using WeatherStation.Library.Repositories.Weatherbit;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Implementation;
 using Xamarin.Essentials.Interfaces;
@@ -92,7 +91,6 @@ namespace WeatherStation.App
         {
             RegisterGeocodingRepository(containerRegistry);
             RegisterAccuWeatherRepository(containerRegistry);
-            RegisterWeatherbitRepository(containerRegistry);
         }
 
         private void RegisterXamarinEssentialsTypes(IContainerRegistry containerRegistry)
@@ -111,17 +109,6 @@ namespace WeatherStation.App
                     Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, language).Result, "Accuweather");
-        }
-
-        private void RegisterWeatherbitRepository(IContainerRegistry containerRegistry)
-        {
-            var restClient = new RestClient("http://api.weatherbit.io/v2.0/");
-            var coordinates = new Coordinates(Preferences.Get("lat",0.0), Preferences.Get("lon",0.0));
-            var language = GetLanguageCode();
-            containerRegistry.RegisterInstance<IWeatherRepositoryStore>(
-                new WeatherbitRepositoryStore(restClient, 
-                    AppApiKeys.WeatherbitApiKey, 
-                    coordinates, Container.Resolve<IDateProvider>(),language), "Weatherbit");
         }
 
         private void RegisterGeocodingRepository(IContainerRegistry containerRegistry)
