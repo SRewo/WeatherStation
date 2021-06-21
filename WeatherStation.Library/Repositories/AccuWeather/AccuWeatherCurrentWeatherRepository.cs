@@ -5,7 +5,7 @@ using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories.AccuWeather
 {
-     public class AccuWeatherCurrentWeatherRepository : WeatherRestRepository
+    public class AccuWeatherCurrentWeatherRepository : WeatherRestRepository
     {
         private readonly IDateProvider _dateProvider;
 
