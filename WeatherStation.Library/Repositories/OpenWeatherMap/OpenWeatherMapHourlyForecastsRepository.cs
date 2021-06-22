@@ -8,8 +8,11 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
 {
     public class OpenWeatherMapHourlyForecastsRepository : WeatherRestRepository
     {
-        public OpenWeatherMapHourlyForecastsRepository(IRestClient client, string resourcePath, string apiKey, IDateProvider dateProvider) : base(client, resourcePath, apiKey, dateProvider)
+        private readonly Coordinates _coordinates;
+
+        public OpenWeatherMapHourlyForecastsRepository(IRestClient client, string resourcePath, string apiKey, IDateProvider dateProvider, Coordinates coordinates) : base(client, resourcePath, apiKey, dateProvider)
         {
+            _coordinates = coordinates;
         }
 
         protected override IEnumerable<WeatherData> CreateWeatherDataListFromResult(dynamic dynamicResult)
@@ -23,6 +26,9 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
             request.AddParameter("appid", ApiKey, ParameterType.QueryString);
             request.AddParameter("lang", Language, ParameterType.QueryString);
             request.AddParameter("units", "metric", ParameterType.QueryString);
+            request.AddParameter("cnt", 1, ParameterType.QueryString);
+            request.AddParameter("lat", _coordinates.Latitude, ParameterType.QueryString);
+            request.AddParameter("lon", _coordinates.Longitude, ParameterType.QueryString);
             request.AddParameter("exclude", "minutely,current,daily,alerts", ParameterType.QueryString);
             return Task.CompletedTask;
         }
@@ -36,9 +42,11 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
                 .SetHumidity((int) dynamicObject.humidity)
                 .SetPressure((int) dynamicObject.pressure)
                 .SetDate(GetLocalDateTimeFromResponse((object) dynamicObject))
-                .SetChanceOfRain((int) dynamicObject.pop)
+                .SetChanceOfRain((int)((float) dynamicObject.pop * 100))
                 .SetWindSpeed((float) dynamicObject.wind_speed, WindSpeedUnit.MetersPerSecond)
-                .SetWindDirection((int) dynamicObject.wind_deg);
+                .SetWindDirection((int) dynamicObject.wind_deg)
+                .SetWeatherCode((int) dynamicObject.weather[0].id)
+                .SetWeatherDescription((string) dynamicObject.weather[0].description);
             return builder.Build();
         }
 

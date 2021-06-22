@@ -27,7 +27,7 @@ namespace WeatherStation.Library.Tests.Repositories.OpenWeatherMap
         {
             var mocks = await CreateMocks();
             var repository =
-                new OpenWeatherMapCurrentWeatherRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object);
+                new OpenWeatherMapCurrentWeatherRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object, new Coordinates(0,0));
             return repository;
         }
 
@@ -54,7 +54,7 @@ namespace WeatherStation.Library.Tests.Repositories.OpenWeatherMap
         {
             var mocks = await CreateMocks();
             var repository =
-                new OpenWeatherMapDailyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object);
+                new OpenWeatherMapDailyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object, new Coordinates(0,0));
             return repository;
         }
 
@@ -72,7 +72,7 @@ namespace WeatherStation.Library.Tests.Repositories.OpenWeatherMap
         {
             var mocks = await CreateMocks();
             var repository =
-                new OpenWeatherMapHourlyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object);
+                new OpenWeatherMapHourlyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object, new Coordinates(0,0));
             return repository;
         }
     }
