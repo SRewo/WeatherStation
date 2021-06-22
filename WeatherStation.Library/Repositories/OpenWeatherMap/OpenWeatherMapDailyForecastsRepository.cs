@@ -5,9 +5,9 @@ using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Library.Repositories.OpenWeatherMap
 {
-    public class OpenWeatherMapCurrentWeatherRepository : WeatherRestRepository
+    public class OpenWeatherMapDailyForecastsRepository : WeatherRestRepository
     {
-        public OpenWeatherMapCurrentWeatherRepository(IRestClient client, string resourcePath, string apiKey, IDateProvider dateProvider) : base(client, resourcePath, apiKey, dateProvider)
+        public OpenWeatherMapDailyForecastsRepository(IRestClient client, string resourcePath, string apiKey, IDateProvider dateProvider) : base(client, resourcePath, apiKey, dateProvider)
         {
         }
 
@@ -16,13 +16,13 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
             request.AddParameter("appid", ApiKey, ParameterType.QueryString);
             request.AddParameter("lang", Language, ParameterType.QueryString);
             request.AddParameter("units", "metric", ParameterType.QueryString);
-            request.AddParameter("exclude", "minutely,hourly,daily,alerts", ParameterType.QueryString);
+            request.AddParameter("exclude", "current,minutely,hourly,alerts", ParameterType.QueryString);
             return Task.CompletedTask;
         }
 
         protected override IEnumerable<WeatherData> CreateWeatherDataListFromResult(dynamic dynamicResult)
         {
-            object weatherData = dynamicResult.current;
+            object weatherData = dynamicResult.daily;
             return base.CreateWeatherDataListFromResult(weatherData);
         }
 
@@ -30,14 +30,15 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
         {
             var builder = new WeatherDataBuilder();
             builder
-                .SetTemperature((float) dynamicObject.temp, TemperatureScale.Celsius)
-                .SetApparentTemperature((float) dynamicObject.feels_like, TemperatureScale.Celsius)
-                .SetHumidity((int) dynamicObject.humidity)
-                .SetPressure((int) dynamicObject.pressure)
-                .SetWindSpeed((float) dynamicObject.wind_speed, WindSpeedUnit.MetersPerSecond)
-                .SetWindDirection((int) dynamicObject.wind_deg)
+                .SetMinTemperature((float) dynamicObject.temp.min, TemperatureScale.Celsius)
+                .SetMaxTemperature((float) dynamicObject.temp.max, TemperatureScale.Celsius)
+                .SetChanceOfRain((int) dynamicObject.pop)
                 .SetWeatherCode((int) dynamicObject.weather[0].id)
-                .SetWeatherDescription((string) dynamicObject.weather[0].description);
+                .SetWeatherDescription((string) dynamicObject.weather[0].description)
+                .SetWindSpeed((float) dynamicObject.wind_speed, WindSpeedUnit.MetersPerSecond)
+                .SetWindDirection((int) dynamicObject.wind_deg);
+                
+
             return builder.Build();
         }
     }
