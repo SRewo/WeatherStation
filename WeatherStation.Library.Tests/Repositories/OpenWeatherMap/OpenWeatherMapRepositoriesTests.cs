@@ -57,5 +57,23 @@ namespace WeatherStation.Library.Tests.Repositories.OpenWeatherMap
                 new OpenWeatherMapDailyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object);
             return repository;
         }
+
+        [Fact]
+        public async Task HourlyForecastsGetData_ValidCall_ReturnsCollectionWithMultipleForecastsData()
+        {
+            var repository = await CreateHourlyForecastRepository();
+
+            var forecasts = await repository.GetWeatherDataFromRepository();
+
+            Assert.True(forecasts.Count() > 1);
+        }
+
+        private async Task<OpenWeatherMapHourlyForecastsRepository> CreateHourlyForecastRepository()
+        {
+            var mocks = await CreateMocks();
+            var repository =
+                new OpenWeatherMapHourlyForecastsRepository(mocks.restClient.Object, "", "", mocks.dateProvider.Object);
+            return repository;
+        }
     }
 }

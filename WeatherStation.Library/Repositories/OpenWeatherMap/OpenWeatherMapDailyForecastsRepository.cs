@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RestSharp;
@@ -36,10 +37,16 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
                 .SetWeatherCode((int) dynamicObject.weather[0].id)
                 .SetWeatherDescription((string) dynamicObject.weather[0].description)
                 .SetWindSpeed((float) dynamicObject.wind_speed, WindSpeedUnit.MetersPerSecond)
-                .SetWindDirection((int) dynamicObject.wind_deg);
-                
+                .SetWindDirection((int) dynamicObject.wind_deg)
+                .SetDate(GetDateTimeFromUnixTimeStamp((long) dynamicObject.dt));
 
             return builder.Build();
+        }
+
+        private DateTime GetDateTimeFromUnixTimeStamp(long timeStamp)
+        {
+            var date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return date.AddSeconds(timeStamp);
         }
     }
 }
