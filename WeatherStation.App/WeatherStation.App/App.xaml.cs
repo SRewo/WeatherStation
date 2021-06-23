@@ -11,6 +11,7 @@ using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
+using WeatherStation.Library.Repositories.OpenWeatherMap;
 using Xamarin.Essentials;
 using Xamarin.Essentials.Implementation;
 using Xamarin.Essentials.Interfaces;
@@ -91,6 +92,7 @@ namespace WeatherStation.App
         {
             RegisterGeocodingRepository(containerRegistry);
             RegisterAccuWeatherRepository(containerRegistry);
+            RegisterOpenWeatherMapRepository(containerRegistry);
         }
 
         private void RegisterXamarinEssentialsTypes(IContainerRegistry containerRegistry)
@@ -109,6 +111,16 @@ namespace WeatherStation.App
                     Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, language).Result, "Accuweather");
+        }
+
+        private void RegisterOpenWeatherMapRepository(IContainerRegistry containerRegistry)
+        {
+            var openWeatherRestClient = new RestClient("https://api.openweathermap.org/data/2.5/onecall");
+            var language = GetLanguageCode();
+            var coordinates = new Coordinates(Preferences.Get("lat", 0.0), Preferences.Get("lon", 0.0));
+            containerRegistry.RegisterInstance<IWeatherRepositoryStore>(
+                new OpenWeatherMapRepositoryStore(AppApiKeys.OpenWeatherMapApiKey, Container.Resolve<IDateProvider>(),
+                    openWeatherRestClient, language, coordinates), "OpenWeatherMap");
         }
 
         private void RegisterGeocodingRepository(IContainerRegistry containerRegistry)

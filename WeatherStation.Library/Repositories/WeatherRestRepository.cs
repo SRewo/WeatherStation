@@ -45,8 +45,11 @@ namespace WeatherStation.Library.Repositories
         {
             var list = new List<WeatherData>();
 
-            foreach (var o in dynamicResult)
-                list.Add(BuildWeatherDataFromDynamicObject(o));
+            if(dynamicResult is IList<object>)
+                foreach (var o in dynamicResult)
+                    list.Add(BuildWeatherDataFromDynamicObject(o));
+            else
+                list.Add(BuildWeatherDataFromDynamicObject(dynamicResult));
 
             return list.AsEnumerable();
         }
