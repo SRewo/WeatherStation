@@ -15,6 +15,9 @@ namespace WeatherStation.App.ViewModels
 {
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
+        private int _chartAndTitleHeight = 420;
+        private readonly Task _prepareChartAndDataList;
+
         protected IDateProvider DateProvider;
         private IWeatherRepositoryStore _repositoryStore;
         private IPreferences _preferences;
@@ -33,6 +36,8 @@ namespace WeatherStation.App.ViewModels
         private bool _areHourlyForecastsSelected;
 
         private string _forecastsTitle;
+
+        private int _dataListHeight;
 
         public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service)
         {
@@ -109,6 +114,12 @@ namespace WeatherStation.App.ViewModels
             set => SetProperty(ref _forecastsTitle, value);
         }
 
+        public int DataListHeight
+        {
+            get => _dataListHeight;
+            set => SetProperty(ref _dataListHeight, value);
+        }
+
         public void OnNavigatedFrom(INavigationParameters parameters)
         {
         }
@@ -138,8 +149,9 @@ namespace WeatherStation.App.ViewModels
 
             await Task.WhenAll(
                     CreateChart(),
-                    ChangeTitle()
-                );
+                    ChangeTitle(),
+                    SetListAndChartViewHeight()
+                    );
         }
 
         private Task GetVariablesFromParameters(INavigationParameters parameters)
@@ -148,32 +160,6 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        private async Task RefreshData()
-        {
-            try
-            {
-                await RefreshViewData();
-            }
-            catch(Exception ex)
-            {
-                await _handlingService.HandleException(ex);
-            }
-        }
-
-        private async Task RefreshViewData()
-        {
-                await ResetWeatherDataFields();
-                await GetData();
-                await CreateChart();
-        }
-
-        private Task ResetWeatherDataFields()
-        {
-            WeatherHourlyData = null;
-            WeatherDailyData = null;
-            WeatherData = null;
-            return Task.CompletedTask;
-        }
 
         private async Task GetData()
         {
@@ -210,10 +196,12 @@ namespace WeatherStation.App.ViewModels
 
         private async Task GetHourlyForecastsFromRepository()
         {
+
             WeatherHourlyData = ContainsHourlyForecasts
                 ? await _repositoryStore.HourlyForecastsRepository.GetWeatherDataFromRepository()
                 : null;
         }
+
 
         public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
         {
@@ -225,13 +213,6 @@ namespace WeatherStation.App.ViewModels
             return Task.CompletedTask;
         }
 
-        private async Task ChangeForecastsType()
-        {
-            AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
-            await Task.WhenAll(
-                ChangeChart(),
-                ChangeTitle());
-        }
 
         private Task ChangeTitle()
         {
@@ -304,6 +285,57 @@ namespace WeatherStation.App.ViewModels
             _dailyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
                 new DailyWeatherDataToTemperatureChartEntries(),
                 WeatherDailyData);
+        }
+
+        private async Task SetListAndChartViewHeight()
+        {
+            DataListHeight = _chartAndTitleHeight + await CalculateItemListHeight();
+        }
+
+        private Task<int> CalculateItemListHeight()
+        {
+            var numberOfItems = AreHourlyForecastsSelected ? WeatherHourlyData.Count() : WeatherDailyData.Count();
+            var itemHeight = 67;
+
+            return Task.FromResult(numberOfItems * itemHeight);
+        }
+
+        private async Task ChangeForecastsType()
+        {
+            AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
+
+            await Task.WhenAll(
+                    CreateChart(),
+                    ChangeTitle(),
+                    SetListAndChartViewHeight()
+                    );
+        }
+
+        private async Task RefreshData()
+        {
+            try
+            {
+                await RefreshViewData();
+            }
+            catch(Exception ex)
+            {
+                await _handlingService.HandleException(ex);
+            }
+        }
+
+        private async Task RefreshViewData()
+        {
+                await ResetWeatherDataFields();
+                await GetData();
+                await CreateChart();
+        }
+
+        private Task ResetWeatherDataFields()
+        {
+            WeatherHourlyData = null;
+            WeatherDailyData = null;
+            WeatherData = null;
+            return Task.CompletedTask;
         }
     }
 }

@@ -26,7 +26,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
-                        <RowDefinition Height="2100"></RowDefinition>
+                        <RowDefinition Height="{Binding DataListHeight}"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -110,7 +110,7 @@
                                             <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureApparent}" HorizontalOptions="End"/>
                                             <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" WidthRequest="1" HeightRequest="20" Margin="0,5,0,5" BackgroundColor="Gray"/>
                                             <StackLayout Grid.Row="0" Grid.Column="3" >
-                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, StringFormat='{}{0:HH:mm}'}"></Label>
+                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, StringFormat='{}{0:dddd HH:mm}'}"></Label>
                                                 <BoxView HeightRequest="0.25" Margin="5,0,5,0" Color="Gray"/>
                                             </StackLayout>
                                             <Label Grid.Row="1" Grid.Column="3" FontSize="13" FontFamily="Roboto" Text="{Binding WeatherDescription}" VerticalOptions="Start" HorizontalOptions="Center"/>
