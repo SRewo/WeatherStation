@@ -15,6 +15,9 @@ namespace WeatherStation.App.ViewModels
 {
     public class MainPageViewModel : BindableBase, INavigatedAware
     {
+        private int _chartAndTitleHeight = 420;
+        private readonly Task _prepareChartAndDataList;
+
         protected IDateProvider DateProvider;
         private IWeatherRepositoryStore _repositoryStore;
         private IPreferences _preferences;
@@ -33,6 +36,10 @@ namespace WeatherStation.App.ViewModels
         private bool _areHourlyForecastsSelected;
 
         private string _forecastsTitle;
+
+        private int _dataListHeight;
+
+        private bool _areBothForecastsTypesAvailable;
 
         public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service)
         {
@@ -65,7 +72,13 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand ChangeChartCommand { get; set; }
         public DelegateCommand ChangeForecastsTypeCommand { get; set; }
         public DelegateCommand RefreshDataCommand { get; set; }
-        public bool AreBothForecastTypesAvailable { get; set; }
+
+
+        public bool AreBothForecastTypesAvailable
+        {
+            get => _areBothForecastsTypesAvailable; 
+            set => SetProperty(ref _areBothForecastsTypesAvailable, value);
+        }
 
         public IEnumerable<WeatherData> WeatherDailyData
         {
@@ -109,6 +122,12 @@ namespace WeatherStation.App.ViewModels
             set => SetProperty(ref _forecastsTitle, value);
         }
 
+        public int DataListHeight
+        {
+            get => _dataListHeight;
+            set => SetProperty(ref _dataListHeight, value);
+        }
+
         public void OnNavigatedFrom(INavigationParameters parameters)
         {
         }
@@ -135,14 +154,169 @@ namespace WeatherStation.App.ViewModels
             await GetVariablesFromParameters(parameters);
             await CheckIfRepositoryContainsDailyAndHourlyForecasts();
             await GetData();
-            await CreateChart();
-            await ChangeTitle();
+
+            await Task.WhenAll(
+                    CreateChart(),
+                    ChangeTitle(),
+                    SetListAndChartViewHeight()
+                    );
         }
 
         private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
             _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
             return Task.CompletedTask;
+        }
+
+
+        private async Task GetData()
+        {
+            if (!IsWeatherDataCurrent())
+                await DownloadWeatherDataFromRepository();
+        }
+
+        private bool IsWeatherDataCurrent()
+        {
+            return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
+        }
+
+        private async Task DownloadWeatherDataFromRepository()
+        {
+            await Task.WhenAll(
+                    GetCurrentWeatherFromRepository(),
+                    GetDailyForecastsFromRepository(),
+                    GetHourlyForecastsFromRepository()
+                );
+        }
+
+        private async Task GetCurrentWeatherFromRepository()
+        {
+            var currentWeather = await _repositoryStore.CurrentWeatherRepository.GetWeatherDataFromRepository();
+            WeatherData = currentWeather.First();
+        }
+
+        private async Task GetDailyForecastsFromRepository()
+        {
+            WeatherDailyData = ContainsDailyForecasts
+                ? await _repositoryStore.DailyForecastsRepository.GetWeatherDataFromRepository()
+                : null;
+        }
+
+        private async Task GetHourlyForecastsFromRepository()
+        {
+
+            WeatherHourlyData = ContainsHourlyForecasts
+                ? await _repositoryStore.HourlyForecastsRepository.GetWeatherDataFromRepository()
+                : null;
+        }
+
+
+        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        {
+            ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
+            ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
+            AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
+            AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
+
+            return Task.CompletedTask;
+        }
+
+
+        private Task ChangeTitle()
+        {
+            ForecastsTitle = AreHourlyForecastsSelected ? "Hourly Forecasts" : "Daily Forecasts";
+
+            return Task.CompletedTask;
+        }
+
+        private Task ChangeChart()
+        {
+            IsTemperatureChartUsed = !_isTemperatureChartUsed;
+            if(!AreHourlyForecastsSelected)
+                Chart = IsTemperatureChartUsed ? _dailyTemperatureChart : _dailyRainChanceChart;
+            else
+                Chart = IsTemperatureChartUsed ? _hourlyTemperatureChart : _hourlyRainChanceChart;
+
+            return Task.CompletedTask;
+        }
+
+        public async Task CreateChart()
+        {
+            var dailyChartsTask = ContainsDailyForecasts ? CreateChartsForDailyForecasts() : Task.CompletedTask;
+            var hourlyChartsTask = ContainsHourlyForecasts ? CreateChartsForHourlyForecasts() : Task.CompletedTask;
+
+            await Task.WhenAll(dailyChartsTask, hourlyChartsTask);
+
+            Chart = ContainsDailyForecasts ? _dailyTemperatureChart : _hourlyRainChanceChart;
+            IsTemperatureChartUsed = true;
+        }
+
+        private async Task CreateChartsForHourlyForecasts()
+        {
+            await Task.WhenAll(
+                CreateRainChanceChartForHourlyForecasts(),
+                CreateTemperatureChartForHourlyForecasts()
+                );
+        }
+
+        private async Task CreateRainChanceChartForHourlyForecasts()
+        {
+            _hourlyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
+                new HourlyWeatherDataToRainChanceChartEntries(),
+                WeatherHourlyData);
+        }
+
+        private async Task CreateTemperatureChartForHourlyForecasts()
+        {
+            _hourlyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
+                new HourlyWeatherDataToTemperatureChartEntries(),
+                WeatherHourlyData);
+        }
+
+        private async Task CreateChartsForDailyForecasts()
+        {
+            await Task.WhenAll(
+                CreateTemperatureChartForDailyForecasts(),
+                CreateRainChanceChartForDailyForecasts()
+                );
+        }
+
+        private async Task CreateRainChanceChartForDailyForecasts()
+        {
+            _dailyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
+                new DailyWeatherDataToRainChanceChartEntries(),
+                WeatherDailyData);
+        }
+
+        private async Task CreateTemperatureChartForDailyForecasts()
+        {
+            _dailyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
+                new DailyWeatherDataToTemperatureChartEntries(),
+                WeatherDailyData);
+        }
+
+        private async Task SetListAndChartViewHeight()
+        {
+            DataListHeight = _chartAndTitleHeight + await CalculateItemListHeight();
+        }
+
+        private Task<int> CalculateItemListHeight()
+        {
+            var numberOfItems = AreHourlyForecastsSelected ? WeatherHourlyData.Count() : WeatherDailyData.Count();
+            var itemHeight = 67;
+
+            return Task.FromResult(numberOfItems * itemHeight);
+        }
+
+        private async Task ChangeForecastsType()
+        {
+            AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
+
+            await Task.WhenAll(
+                    CreateChart(),
+                    ChangeTitle(),
+                    SetListAndChartViewHeight()
+                    );
         }
 
         private async Task RefreshData()
@@ -170,99 +344,6 @@ namespace WeatherStation.App.ViewModels
             WeatherDailyData = null;
             WeatherData = null;
             return Task.CompletedTask;
-        }
-
-        private async Task GetData()
-        {
-            if (!IsWeatherDataCurrent())
-                await DownloadWeatherDataFromRepository();
-        }
-
-        private bool IsWeatherDataCurrent()
-        {
-            return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
-        }
-
-        private async Task DownloadWeatherDataFromRepository()
-        {
-            var currentWeather = await _repositoryStore.CurrentWeatherRepository.GetWeatherDataFromRepository();
-            WeatherData = currentWeather.First();
-            WeatherDailyData = ContainsDailyForecasts
-                ? await _repositoryStore.DailyForecastsRepository.GetWeatherDataFromRepository()
-                : null;
-            WeatherHourlyData = ContainsHourlyForecasts
-                ? await _repositoryStore.HourlyForecastsRepository.GetWeatherDataFromRepository()
-                : null;
-        }
-
-        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
-        {
-            ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
-            ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
-            AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
-            AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
-
-            return Task.CompletedTask;
-        }
-
-        private async Task ChangeForecastsType()
-        {
-            AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
-            await ChangeChart();
-            await ChangeTitle();
-        }
-
-        private Task ChangeTitle()
-        {
-            if(AreHourlyForecastsSelected)
-                ForecastsTitle = "Hourly Forecasts";
-            else
-                ForecastsTitle = "Daily Forecasts";
-
-            return Task.CompletedTask;
-        }
-
-        private Task ChangeChart()
-        {
-            IsTemperatureChartUsed = !_isTemperatureChartUsed;
-            if(!AreHourlyForecastsSelected)
-                Chart = IsTemperatureChartUsed ? _dailyTemperatureChart : _dailyRainChanceChart;
-            else
-                Chart = IsTemperatureChartUsed ? _hourlyTemperatureChart : _hourlyRainChanceChart;
-
-            return Task.CompletedTask;
-        }
-
-        public async Task CreateChart()
-        {
-            if (ContainsDailyForecasts)
-                await CreateChartsForDailyForecasts();
-
-            if (ContainsHourlyForecasts)
-                await CreateChartsForHourlyForecasts();
-
-            Chart = ContainsDailyForecasts ? _dailyTemperatureChart : _hourlyRainChanceChart;
-            IsTemperatureChartUsed = true;
-        }
-
-        private async Task CreateChartsForHourlyForecasts()
-        {
-            _hourlyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
-                new HourlyWeatherDataToRainChanceChartEntries(),
-                WeatherHourlyData);
-            _hourlyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
-                new HourlyWeatherDataToTemperatureChartEntries(),
-                WeatherHourlyData);
-        }
-
-        private async Task CreateChartsForDailyForecasts()
-        {
-            _dailyTemperatureChart = await MainViewChartFactory.CreateTemperatureChart(
-                new DailyWeatherDataToTemperatureChartEntries(),
-                    WeatherDailyData);
-            _dailyRainChanceChart = await MainViewChartFactory.CreateRainChanceChart(
-                new DailyWeatherDataToRainChanceChartEntries(),
-                WeatherDailyData);
         }
     }
 }
