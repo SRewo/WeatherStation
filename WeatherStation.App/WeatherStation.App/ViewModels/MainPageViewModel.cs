@@ -39,6 +39,8 @@ namespace WeatherStation.App.ViewModels
 
         private int _dataListHeight;
 
+        private bool _areBothForecastsTypesAvailable;
+
         public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service)
         {
             DateProvider = dateProvider;
@@ -70,7 +72,13 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand ChangeChartCommand { get; set; }
         public DelegateCommand ChangeForecastsTypeCommand { get; set; }
         public DelegateCommand RefreshDataCommand { get; set; }
-        public bool AreBothForecastTypesAvailable { get; set; }
+
+
+        public bool AreBothForecastTypesAvailable
+        {
+            get => _areBothForecastsTypesAvailable; 
+            set => SetProperty(ref _areBothForecastsTypesAvailable, value);
+        }
 
         public IEnumerable<WeatherData> WeatherDailyData
         {

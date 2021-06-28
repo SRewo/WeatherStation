@@ -18,6 +18,7 @@ using Xamarin.Essentials.Interfaces;
 using Xamarin.Forms;
 using DeviceInfo = Xamarin.Essentials.DeviceInfo;
 using WeatherStation.App.Utilities;
+using WeatherStation.Library.Repositories.Weatherbit;
 
 namespace WeatherStation.App
 {
@@ -93,6 +94,7 @@ namespace WeatherStation.App
             RegisterGeocodingRepository(containerRegistry);
             RegisterAccuWeatherRepository(containerRegistry);
             RegisterOpenWeatherMapRepository(containerRegistry);
+            RegisterWeatherbitRepository(containerRegistry);
         }
 
         private void RegisterXamarinEssentialsTypes(IContainerRegistry containerRegistry)
@@ -107,20 +109,45 @@ namespace WeatherStation.App
             var accuRestClient = new RestClient("http://dataservice.accuweather.com");
             var language = GetLanguageCode();
             containerRegistry.RegisterInstance<IWeatherRepositoryStore>(
-                AccuWeatherRepositoryStore.FromCityCode(AppApiKeys.AccuWeatherApiKey,
+                AccuWeatherRepositoryStore.FromCityCode(
+                    AppApiKeys.AccuWeatherApiKey,
                     Preferences.Get("AccuWeatherCityId", "1411530"),
                     Container.Resolve<IDateProvider>(),
                     accuRestClient, language).Result, "Accuweather");
         }
 
+        private void RegisterWeatherbitRepository(IContainerRegistry containerRegistry)
+        {
+            var repositoryNecessities = PrepareRepositoryNecessities(" http://api.weatherbit.io/v2.0/");
+            containerRegistry.RegisterInstance<IWeatherRepositoryStore>(new WeatherbitRepositoryStore(
+                repositoryNecessities.restClient,
+                AppApiKeys.WeatherbitApiKey,
+                repositoryNecessities.coordinates,
+                Container.Resolve<IDateProvider>(),
+                repositoryNecessities.language), "Weatherbit");
+        }
+
+        private (IRestClient restClient, Coordinates coordinates, string language) PrepareRepositoryNecessities(string restRepositoryUrl)
+        {
+            var restClient = new RestClient(restRepositoryUrl);
+            var language = GetLanguageCode();
+            var coordinates = new Coordinates(
+                Preferences.Get("lat", 0.0), 
+                Preferences.Get("lon", 0.0));
+            return (restClient, coordinates, language);
+
+        }
+
         private void RegisterOpenWeatherMapRepository(IContainerRegistry containerRegistry)
         {
-            var openWeatherRestClient = new RestClient("https://api.openweathermap.org/data/2.5/onecall");
-            var language = GetLanguageCode();
-            var coordinates = new Coordinates(Preferences.Get("lat", 0.0), Preferences.Get("lon", 0.0));
+            var repositoryNecessities = PrepareRepositoryNecessities("https://api.openweathermap.org/data/2.5/onecall");
             containerRegistry.RegisterInstance<IWeatherRepositoryStore>(
-                new OpenWeatherMapRepositoryStore(AppApiKeys.OpenWeatherMapApiKey, Container.Resolve<IDateProvider>(),
-                    openWeatherRestClient, language, coordinates), "OpenWeatherMap");
+                new OpenWeatherMapRepositoryStore(
+                    AppApiKeys.OpenWeatherMapApiKey,
+                    Container.Resolve<IDateProvider>(),
+                    repositoryNecessities.restClient, 
+                    repositoryNecessities.language, 
+                    repositoryNecessities.coordinates), "OpenWeatherMap");
         }
 
         private void RegisterGeocodingRepository(IContainerRegistry containerRegistry)
