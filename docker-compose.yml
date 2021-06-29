@@ -1,0 +1,21 @@
+services:
+    db:
+        image: mysql:latest
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'WeatherStation'
+            MYSQL_ROOT_PASSWORD: 'P@ssword'
+        ports:
+            - '3306:3306'
+        expose:
+            - '3306'
+    services:
+        build:
+            context: ./
+            dockerfile: ./WeatherStation.Services/Dockerfile
+        ports:
+            - '80:80'
+            - '443:443'
+        expose:
+            - '80'
+            - '443'
