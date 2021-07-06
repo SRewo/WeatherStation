@@ -16,6 +16,9 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
         public string RepositoryName { get; } = "OpenWeatherMap";
         public string CityName { get; }
         public string CityId { get; }
+        public bool ContainsDailyForecasts { get; } = true;
+        public bool ContainsHistoricalData { get; } = false;
+        public bool ContainsHourlyForecasts { get; } = true;
         public IWeatherRepository CurrentWeatherRepository { get; private set; }
         public IWeatherRepository DailyForecastsRepository { get; private set; }
         public IWeatherRepository HistoricalDataRepository { get; private set; }
@@ -48,14 +51,12 @@ namespace WeatherStation.Library.Repositories.OpenWeatherMap
         public Task ChangeCity(Coordinates coordinates)
         {
             if (coordinates.IsValid())
-            {
-                _coordinates = coordinates;
-                CreateRepositories();
-            }
-            else
-            {
                 throw new InvalidCoordinatesException();
-            }
+            if(Equals(_coordinates, coordinates))
+                return Task.CompletedTask;
+
+            _coordinates = coordinates;
+            CreateRepositories();
             return Task.CompletedTask;
         }
 

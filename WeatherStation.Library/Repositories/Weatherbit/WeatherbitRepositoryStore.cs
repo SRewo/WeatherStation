@@ -9,12 +9,16 @@ namespace WeatherStation.Library.Repositories.Weatherbit
         private IRestClient _restClient;
         private string _apiKey;
         private IDateProvider _dateProvider;
+        private Coordinates _coordinates;
 
         public string RepositoryName => "Weatherbit";
 
         public string CityName { get; set; } = "";
 
         public string CityId {get; set; }
+        public bool ContainsDailyForecasts { get; } = true;
+        public bool ContainsHistoricalData { get; } = false;
+        public bool ContainsHourlyForecasts { get; } = false;
         public string Language { get; set; }
 
         public IWeatherRepository CurrentWeatherRepository { get; private set; }
@@ -40,11 +44,19 @@ namespace WeatherStation.Library.Repositories.Weatherbit
             DailyForecastsRepository = new WeatherbitDailyForecastRepository(_restClient, _apiKey, coordinates, _dateProvider);
             HourlyForecastsRepository = null;
             HistoricalDataRepository = null;
+
+            _coordinates = coordinates;
             ChangeLanguage(Language);
         }
 
         public Task ChangeCity(Coordinates coordinates)
         {
+            if(!coordinates.IsValid())
+                throw new InvalidCoordinatesException();
+
+            if (Equals(_coordinates, coordinates))
+                return Task.CompletedTask;
+
             CreateRepositories(coordinates);
             return Task.CompletedTask;
         }

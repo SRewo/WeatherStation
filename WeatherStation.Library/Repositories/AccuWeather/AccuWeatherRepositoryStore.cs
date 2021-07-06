@@ -9,7 +9,11 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         private readonly string _apiKey;
         private readonly IDateProvider _provider;
         private readonly IRestClient _restClient;
+        private Coordinates _coordinates;
         public string CityId { get; set; }
+        public bool ContainsDailyForecasts { get; } = true;
+        public bool ContainsHistoricalData { get; } = false;
+        public bool ContainsHourlyForecasts { get; } = true;
         public string CityName { get; set; }
         public string RepositoryName { get; set; } = "AccuWeather";
         public string Language {get; private set; }
@@ -60,6 +64,18 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         public async Task ChangeCity(Coordinates coordinates)
         {
+            if (!coordinates.IsValid())
+                throw new InvalidCoordinatesException();
+
+            if (Equals(coordinates, _coordinates))
+                return;
+
+            _coordinates = coordinates;
+            await CreateRepositoriesFromCoordinates(coordinates);
+        }
+
+        private async Task CreateRepositoriesFromCoordinates(Coordinates coordinates)
+        {
             var repository = new AccuWeatherCityDataFromGeolocation(_restClient, _apiKey, Language);
             var result = await repository.GetCityData(coordinates);
             SetCityDataProperties(result);
@@ -74,10 +90,20 @@ namespace WeatherStation.Library.Repositories.AccuWeather
 
         public Task ChangeLanguage(string language)
         {
-            Language = Language;
+            if (Language == language)
+                return Task.CompletedTask;
+
+            Language = language;
+
+            return ChangeLanguageInRepositories(language);
+        }
+
+        private Task ChangeLanguageInRepositories(string language)
+        {
             CurrentWeatherRepository.Language = language;
             DailyForecastsRepository.Language = language;
             HourlyForecastsRepository.Language = language;
+
             return Task.CompletedTask;
         }
     }
