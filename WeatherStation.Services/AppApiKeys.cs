@@ -1,4 +1,4 @@
-﻿namespace WeatherStation.App
+﻿namespace WeatherStation.Services
 {
     internal static partial class AppApiKeys
     {

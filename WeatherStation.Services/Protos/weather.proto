@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "WeatherStation.Services";
+
+package greet;
+
+enum Repositories{
+	UNKNOWN = 0;
+	ACCUWEATHER = 1;
+	OPENWEATHERMAP = 2;
+	WEATHERBIT = 3;
+}
+
+service WeatherService {
+	rpc GetRepositoryList (ListRequest) returns (ListReply);
+}
+
+message ListRequest
+{
+
+}
+
+message ListReply
+{
+	repeated Repositories ListOfRepositories = 1;
+}
