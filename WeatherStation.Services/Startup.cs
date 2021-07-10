@@ -15,6 +15,7 @@ using WeatherStation.Library.Repositories;
 using WeatherStation.Library.Repositories.AccuWeather;
 using WeatherStation.Library.Repositories.OpenWeatherMap;
 using WeatherStation.Library.Repositories.Weatherbit;
+using WeatherStation.Services.Services;
 
 namespace WeatherStation.Services
 {
@@ -27,6 +28,7 @@ namespace WeatherStation.Services
             services.AddGrpc();
             services.AddSingleton(CreateRepositoryDictionary());
             services.AddSingleton(CreateGeocodingRepository());
+            services.AddGrpcReflection();
         }
 
         private IDictionary<Repositories, IWeatherRepositoryStore> CreateRepositoryDictionary()
@@ -55,7 +57,7 @@ namespace WeatherStation.Services
                     AppApiKeys.AccuWeatherApiKey,
                     "",
                     dateProvider,
-                    accuRestClient, "").Result;
+                    accuRestClient, "pl-PL").Result;
 
             return repository;
         }
@@ -67,7 +69,7 @@ namespace WeatherStation.Services
                 restClient,
                 AppApiKeys.WeatherbitApiKey,
                 new Coordinates(0,0),
-                dateProvider, "");
+                dateProvider, "pl-PL");
 
             return repository;
         }
@@ -79,7 +81,7 @@ namespace WeatherStation.Services
                 AppApiKeys.OpenWeatherMapApiKey,
                 dateProvider,
                 restClient,
-                "",
+                "pl-PL",
                 new Coordinates(0, 0));
 
             return repository;
@@ -113,6 +115,7 @@ namespace WeatherStation.Services
                         await context.Response.WriteAsync(
                             "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
                     });
+                endpoints.MapGrpcReflectionService();
             });
         }
     }

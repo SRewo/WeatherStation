@@ -5,14 +5,14 @@ option csharp_namespace = "WeatherStation.Services";
 package greet;
 
 enum Repositories{
-	UNKNOWN = 0;
-	ACCUWEATHER = 1;
-	OPENWEATHERMAP = 2;
-	WEATHERBIT = 3;
+	ACCUWEATHER = 0;
+	OPENWEATHERMAP = 1;
+	WEATHERBIT = 2;
 }
 
-service WeatherService {
+service Weather {
 	rpc GetRepositoryList (ListRequest) returns (ListReply);
+	rpc GetRepositoryInfo (InfoRequest) returns (InfoReply);
 }
 
 message ListRequest
@@ -23,4 +23,17 @@ message ListRequest
 message ListReply
 {
 	repeated Repositories ListOfRepositories = 1;
+}
+
+message InfoRequest
+{
+	Repositories Repository = 1;
+}
+
+message InfoReply
+{
+	string RepositoryName = 1;
+	bool ContainsDailyForecasts = 2;
+	bool ContainsHourlyForecasts = 3;
+	bool ContainsHistoricalData = 4;
 }
