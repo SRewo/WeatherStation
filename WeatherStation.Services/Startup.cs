@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using RestSharp;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
@@ -28,7 +29,16 @@ namespace WeatherStation.Services
             services.AddGrpc();
             services.AddSingleton(CreateRepositoryDictionary());
             services.AddSingleton(CreateGeocodingRepository());
+            services.AddSingleton(CreateMapper());
             services.AddGrpcReflection();
+        }
+
+        private IMapper CreateMapper()
+        {
+            var profile = new ServiceMapperProfile();
+            var configuration = new MapperConfiguration(opt =>
+                opt.AddProfile(profile));
+            return new Mapper(configuration);
         }
 
         private IDictionary<Repositories, IWeatherRepositoryStore> CreateRepositoryDictionary()

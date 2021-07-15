@@ -1,8 +1,7 @@
 syntax = "proto3";
+import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "WeatherStation.Services";
-
-package greet;
 
 enum Repositories{
 	ACCUWEATHER = 0;
@@ -13,6 +12,7 @@ enum Repositories{
 service Weather {
 	rpc GetRepositoryList (ListRequest) returns (ListReply);
 	rpc GetRepositoryInfo (InfoRequest) returns (InfoReply);
+	rpc GetCurrentWeather (CurrentWeatherRequest) returns (CurrentWeatherReply);
 }
 
 message ListRequest
@@ -36,4 +36,44 @@ message InfoReply
 	bool ContainsDailyForecasts = 2;
 	bool ContainsHourlyForecasts = 3;
 	bool ContainsHistoricalData = 4;
+}
+
+message CurrentWeatherRequest
+{
+	Repositories Repository = 1;
+}
+
+message CurrentWeatherReply
+{
+	Repositories Repository =1;
+	WeatherMessage Weather = 2;
+}
+
+message WeatherMessage
+{
+	google.protobuf.Timestamp Date = 1;
+	TemperatureMessage Temperature = 2;
+	TemperatureMessage TemperatureMin = 3; 
+	TemperatureMessage TemperatureMax = 4;
+	TemperatureMessage TemperatureApparent = 5;
+	int32 Pressure = 6;
+	int32 Humidity = 7;
+	float WindSpeed = 8;
+	int32 WindDirection = 9;
+	int32 ChanceOfRain = 10;
+	float PrecipitationSummary = 11;
+	int32 WeatherCode = 12;
+	string WeatherDescription = 13;
+}
+
+enum TemperatureScale
+{
+	Celsius = 0;
+	Fahrenheit = 1;
+}
+
+message TemperatureMessage
+{
+	float Value = 1;
+	TemperatureScale Scale = 2;
 }
