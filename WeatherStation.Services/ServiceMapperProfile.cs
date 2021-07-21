@@ -17,7 +17,7 @@ namespace WeatherStation.Services
 
             CreateMap<WeatherData, WeatherMessage>().
                 ForMember(x => x.Date, opt => 
-                    opt.MapFrom(src => Timestamp.FromDateTime(src.Date)));
+                    opt.MapFrom(src => Timestamp.FromDateTime(src.Date.ToUniversalTime())));
 
             CreateMap<IWeatherRepositoryStore, InfoReply>();
         }

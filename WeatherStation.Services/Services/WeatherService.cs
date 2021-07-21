@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Google.Api;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Services.Services

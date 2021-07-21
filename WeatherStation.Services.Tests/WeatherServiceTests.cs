@@ -102,7 +102,7 @@ namespace WeatherStation.Services.Tests
             var weatherData = new WeatherData()
             {
                 ChanceOfRain = 10,
-                Date = new DateTime(2020, 01, 01, 10, 10, 10, DateTimeKind.Utc),
+                Date = new DateTime(2020, 01, 01, 10, 10, 10),
                 Temperature = new CelsiusTemperature(12),
                 Humidity = 10,
                 TemperatureApparent = new CelsiusTemperature(13.1f),

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using RestSharp;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
@@ -22,6 +23,23 @@ namespace WeatherStation.Services
 {
     public class Startup
     {
+        private readonly IConfiguration _configuration;
+        private readonly Coordinates _coordinates;
+
+        public Startup(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _coordinates = CreateCoordinatesFromConfig(configuration);
+        }
+
+        private Coordinates CreateCoordinatesFromConfig(IConfiguration configuration)
+        {
+            double latitude, longitude;
+            double.TryParse(configuration["Preferences:Latitude"], out latitude);
+            double.TryParse(configuration["Preferences:Longitude"], out longitude);
+            return new Coordinates(latitude, longitude);
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -65,9 +83,9 @@ namespace WeatherStation.Services
 
             var repository = AccuWeatherRepositoryStore.FromCityCode(
                     AppApiKeys.AccuWeatherApiKey,
-                    "",
+                    _configuration["Preferences:AccuweatherCityCode"],
                     dateProvider,
-                    accuRestClient, "pl-PL").Result;
+                    accuRestClient, _configuration["Preferences:Language"]).Result;
 
             return repository;
         }
@@ -78,8 +96,8 @@ namespace WeatherStation.Services
             var repository = new WeatherbitRepositoryStore(
                 restClient,
                 AppApiKeys.WeatherbitApiKey,
-                new Coordinates(0,0),
-                dateProvider, "pl-PL");
+                _coordinates,
+                dateProvider, _configuration["Preferences:Language"]);
 
             return repository;
         }
@@ -91,8 +109,8 @@ namespace WeatherStation.Services
                 AppApiKeys.OpenWeatherMapApiKey,
                 dateProvider,
                 restClient,
-                "pl-PL",
-                new Coordinates(0, 0));
+                _configuration["Preferences:Language"],
+                _coordinates);
 
             return repository;
         }
