@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Google.Api;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 
 namespace WeatherStation.Services.Services
 {
-    public class WeatherService : WeatherStation.Services.Weather.WeatherBase
+    public class WeatherService : Weather.WeatherBase
     {
         private readonly ILogger<WeatherService> _logger;
         private readonly IDictionary<Repositories, IWeatherRepositoryStore> _repositories;
@@ -52,20 +50,75 @@ namespace WeatherStation.Services.Services
             return Task.FromResult(repository);
         }
 
-        public override async Task<CurrentWeatherReply> GetCurrentWeather(CurrentWeatherRequest request, ServerCallContext context)
+        public override async Task<CurrentWeatherReply> GetCurrentWeather(WeatherRequest request, ServerCallContext context)
+        {
+            try
+            {
+                return await CreateCurrentWeatherReply(request);
+            }
+            catch (RpcException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, $"{ex.GetType()}: {ex.Message}"));
+            }
+
+        }
+
+        private async Task<CurrentWeatherReply> CreateCurrentWeatherReply(WeatherRequest request)
         {
             var repository = await GetRepositoryFromDictionary(request.Repository);
-
-            var weather = await repository.CurrentWeatherRepository.
-                GetWeatherDataFromRepository();
-            var data = weather.First();
+            var weather = await repository.CurrentWeatherRepository.GetWeatherDataFromRepository(); var data = weather.First(); 
             var result = new CurrentWeatherReply()
             {
-                Repository = request.Repository,
                 Weather = _mapper.Map<WeatherMessage>(data)
             };
 
             return result;
         }
+
+        public override async Task<ForecastsReply> GetDailyForecasts(WeatherRequest request, ServerCallContext context)
+        {
+            try
+            {
+                return await PrepareDailyForecastsReply(request);
+            }
+            catch (RpcException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, $"{ex.GetType()}: {ex.Message}"));
+            }
+
+        }
+
+        private async Task<ForecastsReply> PrepareDailyForecastsReply (WeatherRequest request)
+        {
+            var repository = await GetRepositoryAndCheckIfContainsDailyForecasts(request);
+
+            var forecasts = await repository.DailyForecastsRepository.GetWeatherDataFromRepository();
+            var messageEnumerable = _mapper.Map<IEnumerable<WeatherMessage>>(forecasts);
+            var result = new ForecastsReply()
+            {
+                Forecasts = { messageEnumerable }
+            };
+
+            return result;
+        }
+
+        private async Task<IWeatherRepositoryStore> GetRepositoryAndCheckIfContainsDailyForecasts(WeatherRequest request)
+        {
+            var repository = await GetRepositoryFromDictionary(request.Repository);
+            if (!repository.ContainsDailyForecasts)
+                throw new RpcException(new Status(StatusCode.OutOfRange,
+                    $"Repository {request.Repository} does not have daily forecasts."));
+
+            return repository;
+        }
     }
+
 }

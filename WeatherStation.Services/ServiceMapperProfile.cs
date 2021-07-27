@@ -20,6 +20,8 @@ namespace WeatherStation.Services
                     opt.MapFrom(src => Timestamp.FromDateTime(src.Date.ToUniversalTime())));
 
             CreateMap<IWeatherRepositoryStore, InfoReply>();
+
+            
         }
     }
 }

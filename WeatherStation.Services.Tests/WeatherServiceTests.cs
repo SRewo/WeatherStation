@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Moq;
-using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using WeatherStation.Services.Services;
 using Xunit;
@@ -82,35 +83,17 @@ namespace WeatherStation.Services.Tests
 
         private async Task<Dictionary<Repositories, IWeatherRepositoryStore>> PrepareRepositoryForTesting()
         {
+            var repositoryWithHourlyForecasts = await TestMockFactory.CreateRepositoryStoreMock(false, true);
+            var repositoryWithDailyForecasts = await TestMockFactory.CreateRepositoryStoreMock(true, false);
 
-            var repository = new Mock<IWeatherRepositoryStore>();
-            repository.Setup(x => x.RepositoryName).Returns("Testing");
-            repository.Setup(x => x.ContainsHistoricalData).Returns(false);
-            repository.Setup(x => x.ContainsDailyForecasts).Returns(true);
-            repository.Setup(x => x.ContainsHourlyForecasts).Returns(true);
-            repository.Setup(x => x.CurrentWeatherRepository).Returns(await PrepareCurrentWeatherRepository());
             var dictionary = new Dictionary<Repositories, IWeatherRepositoryStore>
             {
-                {Repositories.Accuweather, repository.Object}
+                {Repositories.Accuweather, repositoryWithDailyForecasts.Object},
+                {Repositories.Openweathermap, repositoryWithHourlyForecasts.Object }
             };
             return dictionary;
         }
 
-        private Task<IWeatherRepository> PrepareCurrentWeatherRepository()
-        {
-            var repository = new Mock<IWeatherRepository>();
-            var weatherData = new WeatherData()
-            {
-                ChanceOfRain = 10,
-                Date = new DateTime(2020, 01, 01, 10, 10, 10),
-                Temperature = new CelsiusTemperature(12),
-                Humidity = 10,
-                TemperatureApparent = new CelsiusTemperature(13.1f),
-                WeatherDescription = ""
-            };
-            repository.Setup(x => x.GetWeatherDataFromRepository()).ReturnsAsync(new List<WeatherData> {weatherData});
-            return Task.FromResult(repository.Object);
-        }
 
         [Fact]
         public async Task GetRepositoryInfo_ValidCall_SetsProperDailyForecastFlag()
@@ -131,7 +114,7 @@ namespace WeatherStation.Services.Tests
 
             var result = await service.GetRepositoryInfo(request, null);
 
-            Assert.True(result.ContainsHourlyForecasts);
+            Assert.False(result.ContainsHourlyForecasts);
         }
 
         [Fact]
@@ -158,7 +141,7 @@ namespace WeatherStation.Services.Tests
         public async Task GetCurrentWeather_ReturnsProperObjectType()
         {
             var service = await PrepareWeatherService();
-            var request = new CurrentWeatherRequest() {Repository = Repositories.Accuweather};
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
 
             var result = await service.GetCurrentWeather(request, null);
 
@@ -166,32 +149,10 @@ namespace WeatherStation.Services.Tests
         }
 
         [Fact]
-        public async Task GetCurrentWeather_SetsProperTemperatureEnum()
-        {
-            var service = await PrepareWeatherService();
-            var request = new CurrentWeatherRequest() {Repository = Repositories.Accuweather};
-
-            var result = await service.GetCurrentWeather(request, null);
-
-            Assert.Equal(12, result.Weather.Temperature.Value);
-        }
-
-        [Fact]
-        public async Task GetCurrentWeather_SetsProperTemperatureValue()
-        {
-            var service = await PrepareWeatherService();
-            var request = new CurrentWeatherRequest() {Repository = Repositories.Accuweather};
-
-            var result = await service.GetCurrentWeather(request, null);
-
-            Assert.Equal(TemperatureScale.Celsius, result.Weather.Temperature.Scale);
-        }
-
-        [Fact]
         public async Task GetCurrentWeather_SetsProperDateTimestamp()
         {
             var service = await PrepareWeatherService();
-            var request = new CurrentWeatherRequest() {Repository = Repositories.Accuweather};
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
 
             var result = await service.GetCurrentWeather(request, null);
 
@@ -202,9 +163,68 @@ namespace WeatherStation.Services.Tests
         public async Task GetCurrentWeather_MissingRepository_ThrowsRpcException()
         {
             var service = await PrepareWeatherService();
-            var request = new CurrentWeatherRequest() {Repository = Repositories.Weatherbit};
+            var request = new WeatherRequest() {Repository = Repositories.Weatherbit};
 
             await Assert.ThrowsAnyAsync<RpcException>(() => service.GetCurrentWeather(request, null));
+        }
+
+        [Fact]
+        public async Task GetCurrentWeather_ThrowsAnyException_ThrowsRpcException()
+        {
+            var exception = new Exception("123");
+            var service = await CreateServiceThatThrowsException(exception);
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetCurrentWeather(request, null));
+        }
+
+        [Fact]
+        public async Task GetDailyForecasts_ValidCall_ReturnsProperNumberOfItems()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
+
+            var result = await service.GetDailyForecasts(request, null);
+
+            Assert.Equal(10, result.Forecasts.Count());
+        }
+
+        [Fact]
+        public async Task GetDailyForecast_RepositoryStoreDoesNotHaveRepository_ThrowsRpcException()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest() {Repository = Repositories.Openweathermap};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetDailyForecasts(request, null));
+        }
+
+        [Fact]
+        public async Task GetDailyForecast_DictionaryDoesNotHaveRepositoryStore_ThrowsRpcException()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest() {Repository = Repositories.Weatherbit};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetDailyForecasts(request, null));
+        }
+
+        [Fact]
+        public async Task GetDailyForecast_GetDataFromRepositoryThrowsHtmlException_ThrowsRpcException()
+        {
+            var exception = new HttpRequestException("Bad request");
+            var service = await CreateServiceThatThrowsException(exception);
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetDailyForecasts(request, null));
+        }
+
+        private async Task<WeatherService> CreateServiceThatThrowsException(Exception ex)
+        {
+            var repositoryStoreMock = await TestMockFactory.CreateRepositoryStoreMockThatThrowsException(ex);
+            var repositories = new Dictionary<Repositories, IWeatherRepositoryStore>()
+                {{Repositories.Accuweather, repositoryStoreMock.Object}};
+            var service = new WeatherService(null, repositories, _mapper);
+
+            return service;
         }
     }
 }
