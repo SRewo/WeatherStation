@@ -119,6 +119,40 @@ namespace WeatherStation.Services.Services
 
             return repository;
         }
+
+        public override async Task<ForecastsReply> GetHourlyForecasts(WeatherRequest request, ServerCallContext context)
+        {
+            try
+            {
+                return await PrepareHourlyForecastReply(request);
+            }
+            catch (RpcException)
+            {
+                throw;
+            }catch (Exception ex)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, $"{ex.GetType()}: {ex.Message}"));
+            }
+        }
+
+        private async Task<ForecastsReply> PrepareHourlyForecastReply(WeatherRequest request)
+        {
+            var repository = await GetHourlyForecastsRepository(request);
+            var forecasts = await repository.GetWeatherDataFromRepository();
+            var weatherMessageList = _mapper.Map<IEnumerable<WeatherMessage>>(forecasts);
+
+            return new ForecastsReply{Forecasts = {weatherMessageList}};
+        }
+
+        private async Task<IWeatherRepository> GetHourlyForecastsRepository(WeatherRequest request)
+        {
+            var repositoryStore = await GetRepositoryFromDictionary(request.Repository);
+            if(!repositoryStore.ContainsHourlyForecasts)
+                throw new RpcException(new Status(StatusCode.OutOfRange,
+                    $"Repository {request.Repository} does not have hourly forecasts."));
+
+            return repositoryStore.HourlyForecastsRepository;
+        }
     }
 
 }

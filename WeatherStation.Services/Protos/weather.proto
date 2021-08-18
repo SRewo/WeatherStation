@@ -14,6 +14,7 @@ service Weather {
 	rpc GetRepositoryInfo (InfoRequest) returns (InfoReply);
 	rpc GetCurrentWeather (WeatherRequest) returns (CurrentWeatherReply);
 	rpc GetDailyForecasts (WeatherRequest) returns (ForecastsReply);
+	rpc GetHourlyForecasts (WeatherRequest) returns (ForecastsReply);
 }
 
 message ListRequest

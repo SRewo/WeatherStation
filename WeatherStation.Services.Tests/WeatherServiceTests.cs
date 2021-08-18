@@ -226,5 +226,44 @@ namespace WeatherStation.Services.Tests
 
             return service;
         }
+
+        [Fact]
+        public async Task GetHourlyForecasts_ValidCall()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest{Repository = Repositories.Openweathermap};
+
+            var result = await service.GetHourlyForecasts(request, null);
+
+            Assert.True(result.Forecasts.Any());
+        }
+
+        [Fact]
+        public async Task GetHourlyForecasts_RepositoryStoreDoesNotHaveRepository_ThrowsRpcException()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest() {Repository = Repositories.Weatherbit};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetHourlyForecasts(request, null));
+        }
+
+        [Fact]
+        public async Task GetHourlyForecasts_DictionaryDoesNotHaveRepositoryStore_ThrowsRpcException()
+        {
+            var service = await PrepareWeatherService();
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetHourlyForecasts(request, null));
+        }
+
+        [Fact]
+        public async Task GetHourlyForecasts_GetDataFromRepositoryThrowsHtmlException_ThrowsRpcException()
+        {
+            var exception = new HttpRequestException("Bad request");
+            var service = await CreateServiceThatThrowsException(exception);
+            var request = new WeatherRequest() {Repository = Repositories.Accuweather};
+
+            await Assert.ThrowsAnyAsync<RpcException>(() => service.GetHourlyForecasts(request, null));
+        }
     }
 }

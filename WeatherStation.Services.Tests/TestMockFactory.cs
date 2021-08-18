@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Moq;
@@ -19,15 +20,36 @@ namespace WeatherStation.Services.Tests
             return repository;
         }
 
-        private static async Task PrepareRepositorySetups(Mock<IWeatherRepositoryStore> repository, (bool dailyForecasts, bool HourlyForecasts) contains)
+        private static Task PrepareRepositorySetups(Mock<IWeatherRepositoryStore> repository, (bool dailyForecasts, bool HourlyForecasts) contains)
         {
-            repository.Setup(x => x.RepositoryName).Returns("Testing");
-            repository.Setup(x => x.ContainsHistoricalData).Returns(false);
-            repository.Setup(x => x.ContainsDailyForecasts).Returns(contains.dailyForecasts);
-            repository.Setup(x => x.ContainsHourlyForecasts).Returns(contains.HourlyForecasts);
-            repository.Setup(x => x.CurrentWeatherRepository).Returns(await PrepareCurrentWeatherRepository());
-            repository.Setup(x => x.DailyForecastsRepository)
-                .Returns(await PrepareDailyForecastRepository(contains.dailyForecasts));
+            var tasks = new List<Task>{SetupRepositoryNameAndDailyForecastRepository(repository)};
+
+            if(contains.dailyForecasts)
+                tasks.Add(SetupDailyForecastsRepository(repository));
+
+            if(contains.HourlyForecasts)
+                tasks.Add(SetupHourlyForecastsRepository(repository));
+
+            return Task.WhenAll(tasks);
+        }
+
+        private static async Task SetupRepositoryNameAndDailyForecastRepository(Mock<IWeatherRepositoryStore> mock)
+        {
+            mock.Setup(x => x.RepositoryName).Returns("Testing");
+            mock.Setup(x => x.ContainsHistoricalData).Returns(false);
+            mock.Setup(x => x.CurrentWeatherRepository).Returns(await PrepareCurrentWeatherRepository());
+        }
+
+        private static async Task SetupDailyForecastsRepository(Mock<IWeatherRepositoryStore> mock)
+        {
+            mock.Setup(x => x.ContainsDailyForecasts).Returns(true);
+            mock.Setup(x => x.DailyForecastsRepository).Returns(await PrepareForecastRepository());
+        }
+
+        private static async Task SetupHourlyForecastsRepository(Mock<IWeatherRepositoryStore> mock)
+        {
+            mock.Setup(x => x.ContainsHourlyForecasts).Returns(true);
+            mock.Setup(x => x.HourlyForecastsRepository).Returns(await PrepareForecastRepository());
         }
 
         private static async Task<IWeatherRepository> PrepareCurrentWeatherRepository()
@@ -64,11 +86,8 @@ namespace WeatherStation.Services.Tests
             return Task.FromResult(filler);
         }
 
-        private static async Task<IWeatherRepository> PrepareDailyForecastRepository(bool isNotNull)
+        private static async Task<IWeatherRepository> PrepareForecastRepository()
         {
-            if (!isNotNull)
-                return null;
-
             var repository = new Mock<IWeatherRepository>();
             var filler = await CreateWeatherDataFiller();
             repository.Setup(x => x.GetWeatherDataFromRepository()).ReturnsAsync(filler.Create(10));
