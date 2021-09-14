@@ -16,7 +16,7 @@ namespace WeatherStation.App.Utilities
             Converter = converter;
         }
 
-       public async Task<T> CreateChart(IEnumerable<WeatherData> data)
+       public async Task<T> CreateChart(IEnumerable<WeatherMessage> data)
        {
            var entries = Converter.ConvertCollection(data);
            Chart = await CreateChartWithEntries(entries);

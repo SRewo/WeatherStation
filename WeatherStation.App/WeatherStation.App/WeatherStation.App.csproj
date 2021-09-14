@@ -12,6 +12,13 @@
 
   <ItemGroup>
     <PackageReference Include="dotenv.net" Version="2.1.1" />
+    <PackageReference Include="Google.Protobuf" Version="3.17.3" />
+    <PackageReference Include="Grpc.Core" Version="2.39.1" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.39.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.39.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microcharts.Forms" Version="0.9.5.9" />
     <PackageReference Include="Prism.Unity.Forms" Version="8.0.0.1909" />
     <PackageReference Include="System.IO.Abstractions" Version="13.2.33" />
@@ -45,6 +52,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WeatherStation.Library\WeatherStation.Library.csproj" />
   </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos\weather.proto" GrpcServices="Client"/>
+    </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Xamarin.iOS">

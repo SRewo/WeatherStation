@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microcharts;
 using SkiaSharp;
@@ -8,17 +9,22 @@ namespace WeatherStation.App.Utilities
 {
     public abstract class WeatherDataToChartEntryConverter
     {
-        public virtual IEnumerable<ChartEntry> ConvertCollection(IEnumerable<WeatherData> data)
+        public virtual IEnumerable<ChartEntry> ConvertCollection(IEnumerable<WeatherMessage> data)
         {
             return data.Select(Convert);
         }
 
-        public abstract ChartEntry Convert(WeatherData weatherData);
+        public abstract ChartEntry Convert(WeatherMessage weatherData);
+
+        protected DateTime GetDateTimeFromMessage(WeatherMessage message)
+        {
+            return new DateTime(message.Date.Seconds, DateTimeKind.Utc);
+        }
     }
 
     public abstract class WeatherDataToTemperatureChartEntryConverter : WeatherDataToChartEntryConverter
     {
-        protected SKColor GetProperColorRelativeToTemperature(Temperature temperature)
+        protected SKColor GetProperColorRelativeToTemperature(TemperatureMessage temperature)
         {
             var tempValue = temperature.Value;
             if(tempValue > 35)
@@ -55,11 +61,11 @@ namespace WeatherStation.App.Utilities
 
     public class DailyWeatherDataToTemperatureChartEntries : WeatherDataToTemperatureChartEntryConverter
     {
-        public override ChartEntry Convert(WeatherData weatherData)
+        public override ChartEntry Convert(WeatherMessage weatherData)
         {
             return new ChartEntry(weatherData.TemperatureMax.Value)
             {
-                Label = weatherData.Date.ToShortDateString(),
+                Label = GetDateTimeFromMessage(weatherData).ToShortDateString(),
                 ValueLabel = weatherData.TemperatureMax.ToString(),
                 Color = GetProperColorRelativeToTemperature(weatherData.TemperatureMax)
             };
@@ -68,12 +74,12 @@ namespace WeatherStation.App.Utilities
 
     public class DailyWeatherDataToRainChanceChartEntries : WeatherDataToRainChanceChartEntryConverter
     {
-        public override ChartEntry Convert(WeatherData weatherData)
+        public override ChartEntry Convert(WeatherMessage weatherData)
         {
             return new ChartEntry(weatherData.ChanceOfRain)
             {
                 ValueLabel = $"{weatherData.ChanceOfRain}%",
-                Label = weatherData.Date.ToShortDateString(),
+                Label = GetDateTimeFromMessage(weatherData).ToShortDateString(),
                 Color = GetProperColorRelativeToRainChance(weatherData.ChanceOfRain)
             };
         }
@@ -81,11 +87,11 @@ namespace WeatherStation.App.Utilities
 
     public class HourlyWeatherDataToTemperatureChartEntries : WeatherDataToTemperatureChartEntryConverter
     {
-        public override ChartEntry Convert(WeatherData weatherData)
+        public override ChartEntry Convert(WeatherMessage weatherData)
         {
             return new ChartEntry(weatherData.Temperature.Value)
             {
-                Label = weatherData.Date.ToShortTimeString(),
+                Label = GetDateTimeFromMessage(weatherData).ToShortTimeString(),
                 ValueLabel = weatherData.Temperature.ToString(),
                 Color = GetProperColorRelativeToTemperature(weatherData.Temperature)
             };
@@ -94,12 +100,12 @@ namespace WeatherStation.App.Utilities
 
     public class HourlyWeatherDataToRainChanceChartEntries : WeatherDataToRainChanceChartEntryConverter
         {
-            public override ChartEntry Convert(WeatherData weatherData)
+            public override ChartEntry Convert(WeatherMessage weatherData)
             {
                 return new ChartEntry(weatherData.ChanceOfRain)
                 {
                     ValueLabel = $"{weatherData.ChanceOfRain}%",
-                    Label = weatherData.Date.ToShortTimeString(),
+                    Label = GetDateTimeFromMessage(weatherData).ToShortTimeString(),
                     Color = GetProperColorRelativeToRainChance(weatherData.ChanceOfRain)
                 };
             }

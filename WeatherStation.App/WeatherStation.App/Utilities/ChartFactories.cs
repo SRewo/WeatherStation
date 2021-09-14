@@ -8,7 +8,7 @@ namespace WeatherStation.App.Utilities
 {
     public static class MainViewChartFactory
     {
-        public static async Task<Chart> CreateRainChanceChart(WeatherDataToRainChanceChartEntryConverter converter, IEnumerable<WeatherData> data)
+        public static async Task<Chart> CreateRainChanceChart(WeatherDataToRainChanceChartEntryConverter converter, IEnumerable<WeatherMessage> data)
         {
             var chartHandler = new MainViewBarChartHandler(converter);
             if(data.Count() > 12)
@@ -16,7 +16,7 @@ namespace WeatherStation.App.Utilities
             return await chartHandler.CreateChart(data);
         }
 
-        public static async Task<Chart> CreateTemperatureChart(WeatherDataToTemperatureChartEntryConverter converter, IEnumerable<WeatherData> data)
+        public static async Task<Chart> CreateTemperatureChart(WeatherDataToTemperatureChartEntryConverter converter, IEnumerable<WeatherMessage> data)
         {
             var chartHandler = new MainViewLineChartHandler(converter);
             if(data.Count() > 12)

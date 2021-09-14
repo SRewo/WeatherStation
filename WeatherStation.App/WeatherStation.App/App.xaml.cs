@@ -19,6 +19,8 @@ using Xamarin.Forms;
 using DeviceInfo = Xamarin.Essentials.DeviceInfo;
 using WeatherStation.App.Utilities;
 using WeatherStation.Library.Repositories.Weatherbit;
+using Grpc.Core;
+using Grpc.Net.Client;
 
 namespace WeatherStation.App
 {
@@ -64,6 +66,7 @@ namespace WeatherStation.App
             RegisterExceptionHandlingServices(containerRegistry);
             RegisterXamarinEssentialsTypes(containerRegistry);
             RegisterViewsForNavigation(containerRegistry);
+            RegisterGrpcClient(containerRegistry);
         }
 
         private void RegisterExceptionHandlingServices(IContainerRegistry containerRegistry)
@@ -93,6 +96,14 @@ namespace WeatherStation.App
             containerRegistry.Register<IPreferences, PreferencesImplementation>();
             containerRegistry.Register<IGeolocation, GeolocationImplementation>();
             containerRegistry.Register<IGeocoding, GeocodingImplementation>();
+        }
+
+        private void RegisterGrpcClient(IContainerRegistry containerRegistry)
+        {
+            var ipAdress = Current.Container.Resolve<IPreferences>().Get("IP","192.168.1.101");
+            Channel channel = new Channel(ipAdress, ChannelCredentials.Insecure);
+            var client = new Weather.WeatherClient(channel);
+            containerRegistry.RegisterInstance(client);
         }
 
         private string GetLanguageCode()

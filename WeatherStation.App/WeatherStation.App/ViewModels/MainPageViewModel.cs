@@ -10,6 +10,7 @@ using WeatherStation.App.Utilities;
 using WeatherStation.Library;
 using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials.Interfaces;
+using static WeatherStation.App.Weather;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -19,15 +20,14 @@ namespace WeatherStation.App.ViewModels
         private readonly Task _prepareChartAndDataList;
 
         protected IDateProvider DateProvider;
-        private IWeatherRepositoryStore _repositoryStore;
         private IPreferences _preferences;
         private Chart _dailyTemperatureChart;
 
-        private IEnumerable<WeatherData> _weatherDailyData;
+        private IEnumerable<WeatherMessage> _weatherDailyData;
 
-        private WeatherData _weatherData;
+        private WeatherMessage _weatherData;
 
-        private IEnumerable<WeatherData> _weatherHourlyData;
+        private IEnumerable<WeatherMessage> _weatherHourlyData;
 
         private Chart _chart;
 
@@ -41,8 +41,13 @@ namespace WeatherStation.App.ViewModels
 
         private bool _areBothForecastsTypesAvailable;
 
-        public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service)
+        private readonly WeatherClient _client;
+
+        private Repositories _repositoryEnum;
+
+        public MainPageViewModel(IDateProvider dateProvider, IPreferences preferences, IExceptionHandlingService service, WeatherClient weatherClient)
         {
+            _client = weatherClient;
             DateProvider = dateProvider;
             _handlingService = service;
             _preferences = preferences;
@@ -54,13 +59,13 @@ namespace WeatherStation.App.ViewModels
             CityName = _preferences.Get("CityName", "");
         }
 
-        public WeatherData WeatherData
+        public WeatherMessage WeatherData
         {
             get => _weatherData;
             set => SetProperty(ref _weatherData, value);
         }
 
-        public IEnumerable<WeatherData> WeatherHourlyData
+        public IEnumerable<WeatherMessage> WeatherHourlyData
         {
             get => _weatherHourlyData;
             set => SetProperty(ref _weatherHourlyData, value);
@@ -80,7 +85,7 @@ namespace WeatherStation.App.ViewModels
             set => SetProperty(ref _areBothForecastsTypesAvailable, value);
         }
 
-        public IEnumerable<WeatherData> WeatherDailyData
+        public IEnumerable<WeatherMessage> WeatherDailyData
         {
             get => _weatherDailyData;
             set => SetProperty(ref _weatherDailyData, value);
@@ -164,61 +169,66 @@ namespace WeatherStation.App.ViewModels
 
         private Task GetVariablesFromParameters(INavigationParameters parameters)
         {
-            _repositoryStore = (IWeatherRepositoryStore) parameters["repositoryStore"];
+            _repositoryEnum = (Repositories) parameters["repository"];
             return Task.CompletedTask;
         }
-
 
         private async Task GetData()
         {
-            if (!IsWeatherDataCurrent())
-                await DownloadWeatherDataFromRepository();
-        }
-
-        private bool IsWeatherDataCurrent()
-        {
-            return WeatherData != null && DateProvider.GetActualDateTime() - WeatherData.Date <= TimeSpan.FromHours(1);
-        }
-
-        private async Task DownloadWeatherDataFromRepository()
-        {
             await Task.WhenAll(
-                    GetCurrentWeatherFromRepository(),
-                    GetDailyForecastsFromRepository(),
-                    GetHourlyForecastsFromRepository()
+                    GetCurrentWeather(),
+                    GetDailyForecasts(),
+                    GetHourlyForecasts()
                 );
         }
 
-        private async Task GetCurrentWeatherFromRepository()
+        private async Task GetCurrentWeather()
         {
-            var currentWeather = await _repositoryStore.CurrentWeatherRepository.GetWeatherDataFromRepository();
-            WeatherData = currentWeather.First();
+            var request = new WeatherRequest{Repository = _repositoryEnum};
+            var currentWeather = await _client.GetCurrentWeatherAsync(request);
+            WeatherData = currentWeather.Weather;
         }
 
-        private async Task GetDailyForecastsFromRepository()
+        private async Task GetDailyForecasts()
         {
             WeatherDailyData = ContainsDailyForecasts
-                ? await _repositoryStore.DailyForecastsRepository.GetWeatherDataFromRepository()
+                ? await GetDailyForecastsFromRepository()
                 : null;
         }
 
-        private async Task GetHourlyForecastsFromRepository()
+        private async Task<IEnumerable<WeatherMessage>> GetDailyForecastsFromRepository()
+        {
+            var request = new WeatherRequest{Repository = _repositoryEnum};
+            var result = await _client.GetDailyForecastsAsync(request);
+            return result.Forecasts;
+        }
+
+        private async Task GetHourlyForecasts()
         {
 
             WeatherHourlyData = ContainsHourlyForecasts
-                ? await _repositoryStore.HourlyForecastsRepository.GetWeatherDataFromRepository()
+                ? await GetHourlyForecastsFromRepository() 
                 : null;
         }
 
-
-        public Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        private async Task<IEnumerable<WeatherMessage>> GetHourlyForecastsFromRepository()
         {
-            ContainsDailyForecasts = _repositoryStore.DailyForecastsRepository != null;
-            ContainsHourlyForecasts = _repositoryStore.HourlyForecastsRepository != null;
+            var request = new WeatherRequest{Repository = _repositoryEnum};
+            var result = await _client.GetHourlyForecastsAsync(request);
+            return result.Forecasts;
+        }
+
+
+        public async Task CheckIfRepositoryContainsDailyAndHourlyForecasts()
+        {
+            var request = new InfoRequest{Repository = _repositoryEnum};
+            var repositoryInfo = await _client.GetRepositoryInfoAsync(request);
+
+            ContainsDailyForecasts = repositoryInfo.ContainsDailyForecasts;
+            ContainsHourlyForecasts = repositoryInfo.ContainsHourlyForecasts;
+
             AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
             AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
-
-            return Task.CompletedTask;
         }
 
 

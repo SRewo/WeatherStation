@@ -1,21 +1,25 @@
 ﻿using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Navigation;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using WeatherStation.App.Utilities;
 using WeatherStation.App.Views;
 using WeatherStation.Library.Interfaces;
+using static WeatherStation.App.Weather;
 
 namespace WeatherStation.App.ViewModels
 {
     public class MasterPageViewModel : BindableBase
     {
-        private readonly IWeatherRepositoryStore[] _repositories;
+        private readonly WeatherClient _client;
         private ObservableCollection<MenuItem> _menuItems;
         private MenuItem _selectedItem;
         private readonly INavigationService _navigationService;
+        private readonly IExceptionHandlingService _exceptionHandlingService;
 
         public ObservableCollection<MenuItem> MenuItems
         {
@@ -31,37 +35,52 @@ namespace WeatherStation.App.ViewModels
 
         public DelegateCommand OpenViewCommand { get; set; }
 
-        public MasterPageViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositories, INavigationService service)
+        public MasterPageViewModel(WeatherClient client, INavigationService service, IExceptionHandlingService exceptionHandling)
         {
-            _repositories = weatherRepositories.ToArray();
+            _exceptionHandlingService = exceptionHandling;
+            _client = client;
             _navigationService = service;
             OpenViewCommand = new DelegateCommand(async () => await OpenViewAsync());
             MenuItems = new ObservableCollection<MenuItem>(CreateMenuItems().Result);
         }
-
+        
         public async Task<MenuItem[]> CreateMenuItems()
         {
+            try
+            {
+                return await CreateMenuItemsArray();
+            }
+            catch(Exception ex)
+            {
+                await _exceptionHandlingService.HandleException(ex);
+            }
+            return new MenuItem[0];
+        }
+
+        private async Task<MenuItem[]> CreateMenuItemsArray()
+        {
             var collection = new List<MenuItem>();
-            collection.AddRange(await CreateRepositoryMenuItems(_repositories));
+            collection.AddRange(await CreateRepositoryMenuItems());
             var settingsMenuItem = await CreateSettingsMenuItem();
             collection.Add(settingsMenuItem);
             return collection.ToArray();
         }
 
-        private async Task<IList<MenuItem>> CreateRepositoryMenuItems(IEnumerable<IWeatherRepositoryStore> repositories)
+        private async Task<IList<MenuItem>> CreateRepositoryMenuItems()
         {
+            var repositories = await _client.GetRepositoryListAsync(new ListRequest());
             var menuItems = new List<MenuItem>();
-            foreach(var r in repositories) menuItems.Add(await CreateMenuItemFromRepository(r));
+            foreach(var r in repositories.ListOfRepositories) menuItems.Add(await CreateMenuItemFromRepository(r));
             return menuItems;
         }
 
-        private Task<MenuItem> CreateMenuItemFromRepository(IWeatherRepositoryStore repositoryStore)
+        private Task<MenuItem> CreateMenuItemFromRepository(Repositories repositoryEnum)
         {
             var item = new MenuItem
             {
                 TargetView = nameof(MainPageView),
-                Title = repositoryStore.RepositoryName,
-                Parameters = new NavigationParameters {{"repositoryStore", repositoryStore}}
+                Title = repositoryEnum.ToString(),
+                Parameters = new NavigationParameters {{"repository", repositoryEnum}}
             };
             return Task.FromResult(item);
         }

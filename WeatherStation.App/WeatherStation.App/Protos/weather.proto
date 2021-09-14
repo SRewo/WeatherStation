@@ -1,0 +1,85 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "WeatherStation.App";
+
+enum Repositories{
+	ACCUWEATHER = 0;
+	OPENWEATHERMAP = 1;
+	WEATHERBIT = 2;
+}
+
+service Weather {
+	rpc GetRepositoryList (ListRequest) returns (ListReply);
+	rpc GetRepositoryInfo (InfoRequest) returns (InfoReply);
+	rpc GetCurrentWeather (WeatherRequest) returns (CurrentWeatherReply);
+	rpc GetDailyForecasts (WeatherRequest) returns (ForecastsReply);
+	rpc GetHourlyForecasts (WeatherRequest) returns (ForecastsReply);
+}
+
+message ListRequest
+{
+
+}
+
+message ListReply
+{
+	repeated Repositories ListOfRepositories = 1;
+}
+
+message InfoRequest
+{
+	Repositories Repository = 1;
+}
+
+message InfoReply
+{
+	string RepositoryName = 1;
+	bool ContainsDailyForecasts = 2;
+	bool ContainsHourlyForecasts = 3;
+	bool ContainsHistoricalData = 4;
+}
+
+message WeatherRequest
+{
+	Repositories Repository = 1;
+}
+
+message CurrentWeatherReply
+{
+	WeatherMessage Weather = 1;
+}
+
+message WeatherMessage
+{
+	google.protobuf.Timestamp Date = 1;
+	TemperatureMessage Temperature = 2;
+	TemperatureMessage TemperatureMin = 3; 
+	TemperatureMessage TemperatureMax = 4;
+	TemperatureMessage TemperatureApparent = 5;
+	int32 Pressure = 6;
+	int32 Humidity = 7;
+	float WindSpeed = 8;
+	int32 WindDirection = 9;
+	int32 ChanceOfRain = 10;
+	float PrecipitationSummary = 11;
+	int32 WeatherCode = 12;
+	string WeatherDescription = 13;
+}
+
+enum TemperatureScale
+{
+	Celsius = 0;
+	Fahrenheit = 1;
+}
+
+message TemperatureMessage
+{
+	float Value = 1;
+	TemperatureScale Scale = 2;
+}
+
+message ForecastsReply 
+{
+	repeated WeatherMessage Forecasts = 1;
+}
