@@ -100,7 +100,7 @@ namespace WeatherStation.App
 
         private void RegisterGrpcClient(IContainerRegistry containerRegistry)
         {
-            var ipAdress = Current.Container.Resolve<IPreferences>().Get("IP","192.168.1.101");
+            var ipAdress = Current.Container.Resolve<IPreferences>().Get("Address","192.168.1.101");
             Channel channel = new Channel(ipAdress, ChannelCredentials.Insecure);
             var client = new Weather.WeatherClient(channel);
             containerRegistry.RegisterInstance(client);

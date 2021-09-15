@@ -9,6 +9,8 @@ using Xamarin.Essentials;
 using Xamarin.Essentials.Interfaces;
 using WeatherStation.Library;
 using WeatherStation.App.Utilities;
+using static WeatherStation.App.Weather;
+using Grpc.Core;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -23,6 +25,7 @@ namespace WeatherStation.App.ViewModels
         private IExceptionHandlingService _handlingService;
         private double _latitude;
         private double _longitude;
+        private WeatherClient _client;
         private string _cityName;
 
         public string CityName
@@ -35,11 +38,20 @@ namespace WeatherStation.App.ViewModels
             }
         }
 
+        private string _serverAddress;
+
+        public string ServerAddress
+        {
+            get => _serverAddress;
+            set => SetProperty(ref _serverAddress, value);
+        }
+
         public DelegateCommand SaveSettingsCommand { get; set; }
         public DelegateCommand GetLocationCommand { get; set; }
+        public DelegateCommand TestConnectionCommand {get; set; }
         public bool AreCoordinatesUsed { get; private set; } = false;
 
-        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository, IExceptionHandlingService service)
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository, IExceptionHandlingService service, WeatherClient client)
         {
             _handlingService = service;
             _geocodingRepository = geocodingRepository;
@@ -48,9 +60,14 @@ namespace WeatherStation.App.ViewModels
             _geolocation = geolocation;
             _alertService = alertService;
             _geocoding = geocoding;
+            _client = client;
+
             CityName = preferences.Get("CityName", "");
+            ServerAddress = preferences.Get("Address", "");
+
             SaveSettingsCommand = new DelegateCommand(async () => await SaveSettings());
             GetLocationCommand = new DelegateCommand(async () => await GetLocation());
+            TestConnectionCommand = new DelegateCommand(async () => await TestConnection());
         }
 
         public async Task SaveSettings()
@@ -70,6 +87,10 @@ namespace WeatherStation.App.ViewModels
             var currentCity = _preferences.Get("CityName", "");
             if(CityName != currentCity)
                 await SaveCitySettings();
+
+            var currentAddress = _preferences.Get("Address", "");
+            if(ServerAddress != currentAddress)
+                await SaveAddressSettings();
             
             await _alertService.DisplayAlert("Settings Saved", "Settings was saved.");
             SaveCoordinatesInPreferences();
@@ -100,7 +121,7 @@ namespace WeatherStation.App.ViewModels
 
         private async Task SaveCitySettingsInRepositoryStore(IWeatherRepositoryStore store)
         {
-             await store.ChangeCity(new Coordinates(_latitude, _longitude));
+            await store.ChangeCity(new Coordinates(_latitude, _longitude));
 
             _preferences.Set($"{store.RepositoryName}CityId", store.CityId);
         }
@@ -156,6 +177,47 @@ namespace WeatherStation.App.ViewModels
                 CityName = $"{locationData.Locality},{locationData.CountryName}";
         }
 
+        private async Task SaveAddressSettings()
+        {
+            if(await IsAddressValid(_serverAddress))
+                await ChangeServerAddressProperty();
+            else
+                await _alertService.DisplayAlert("Invalid Address", "Invalid address, server address was not saved");
+        }
+
+        private Task ChangeServerAddressProperty()
+        {
+            _preferences.Set("Address", _serverAddress);
+            var channel = new Channel(_serverAddress, null);
+            var client = new WeatherClient(channel);
+            _client = client;
+
+            return Task.CompletedTask;
+        }
+
+        private async Task TestConnection()
+        {
+            if(await IsAddressValid(_serverAddress))
+                await _alertService.DisplayAlert("Connected", "Connected successfully, address is valid.");
+            else
+                await _alertService.DisplayAlert("Invalid Address", "There were some problems while connecting to the server, try to provide another server address and try again");
+        }
+
+        private async Task<bool> IsAddressValid(string address)
+        {
+            var channel = new Channel(address, null);
+            var service  = new WeatherClient(channel);
+            try
+            {
+                _ = await service.GetRepositoryListAsync(new ListRequest(), null);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
 
     }
 }
