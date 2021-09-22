@@ -1,70 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Grpc.Core;
 using Moq;
 using Prism.Navigation;
-using WeatherStation.App.ViewModels;
-using WeatherStation.Library;
-using WeatherStation.Library.Interfaces;
+using System;
+using System.Threading.Tasks;
 using WeatherStation.App.Utilities;
+using WeatherStation.App.ViewModels;
+using WeatherStation.Library.Interfaces;
 using Xamarin.Essentials.Interfaces;
 using Xunit;
+using static WeatherStation.App.Weather;
 
 namespace WeatherStation.App.Tests.ViewModelsTests
 {
     public class MainPageViewModelTests
     {
-
         [Fact]
-        public async Task PerformRequiredTasks_WeatherDataIsNull_GetsWeatherDataFromRepository()
+        public async Task PerformRequiredTasks_WeatherDataIsNull_GetsCurrentWeatherDataFromRepository()
         {
-            var storeMock = new Mock<IWeatherRepositoryStore>();
-            PrepareCurrentWeatherRepository(storeMock);
-            var parameters = new NavigationParameters {{"repositoryStore", storeMock.Object}};
-            var model = CreateViewModel();
+            var clientMock = CreateClientMock();
+            var parameters = new NavigationParameters { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(clientMock);
             model.WeatherData = null;
 
             await model.PerformRequiredTasks(parameters);
 
-            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Once);
+            clientMock.Verify(x => x.GetCurrentWeatherAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
         }
 
-        private void PrepareCurrentWeatherRepository(Mock<IWeatherRepositoryStore> storeMock)
+        private Mock<WeatherClient> CreateClientMock()
         {
+            var clientMock = new Mock<WeatherClient>();
+            SetupRepositoryInfo(clientMock);
+            SetupCurrentWeatherReply(clientMock);
+            SetupDailyForecastsReply(clientMock);
+            SetupHourlyForecastsReply(clientMock);
 
-            var weatherData = new WeatherData();
-            var weatherDataList = new List<WeatherData> {weatherData};
-            storeMock.Setup(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository()).ReturnsAsync(weatherDataList);
+            return clientMock;
         }
 
-        private MainPageViewModel CreateViewModel()
+        private void SetupRepositoryInfo(Mock<WeatherClient> clientMock)
+        {
+            var infoReply = Task.FromResult(new InfoReply
+            {
+                ContainsDailyForecasts = true,
+                ContainsHourlyForecasts = true
+            });
+            clientMock.Setup(
+                x => x.GetRepositoryInfoAsync(It.IsAny<InfoRequest>(), null, null, default))
+                .Returns(new AsyncUnaryCall<InfoReply>(infoReply, null, null, null, null));
+        }
+
+        private void SetupCurrentWeatherReply(Mock<WeatherClient> clientMock)
+        {
+            clientMock.Setup(
+                x => x.GetCurrentWeatherAsync(It.IsAny<WeatherRequest>(), null, null, default))
+                .Returns(new AsyncUnaryCall<CurrentWeatherReply>(ReplyFactory.CreateCurrentWeatherReply(), null, null, null, null));
+        }
+
+        private void SetupDailyForecastsReply(Mock<WeatherClient> clientMock)
+        {
+            clientMock.Setup(
+                x => x.GetDailyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default))
+                .Returns(new AsyncUnaryCall<ForecastsReply>(ReplyFactory.CreateForecastsReply(10), null, null, null, null));
+        }
+
+        private void SetupHourlyForecastsReply(Mock<WeatherClient> clientMock)
+        {
+            clientMock.Setup(
+                x => x.GetHourlyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default))
+                .Returns(new AsyncUnaryCall<ForecastsReply>(ReplyFactory.CreateForecastsReply(10), null, null, null, null));
+        }
+
+        private MainPageViewModel CreateViewModel(Mock<WeatherClient> clientMock)
         {
             var dateProvider = PrepareDateProvider();
             var preferences = new Mock<IPreferences>();
             var handler = new Mock<IExceptionHandlingService>();
-            return new MainPageViewModel(dateProvider.Object, preferences.Object, handler.Object);
+            return new MainPageViewModel(dateProvider.Object, preferences.Object, handler.Object, clientMock.Object);
         }
-        private MainPageViewModel CreateViewModel(Mock<IExceptionHandlingService> serviceMock)
+
+        private MainPageViewModel CreateViewModel(Mock<WeatherClient> clientMock, Mock<IExceptionHandlingService> serviceMock)
         {
             var dateProvider = PrepareDateProvider();
             var preferences = new Mock<IPreferences>();
-            return new MainPageViewModel(dateProvider.Object, preferences.Object, serviceMock.Object);
-        }
-
-        [Fact]
-        public async Task PerformRequiredTasks_WeatherDataDateDiffIsLargerThan1Hour_GetsWeatherDataFromRepository()
-        {
-            var storeMock = new Mock<IWeatherRepositoryStore>();
-            PrepareCurrentWeatherRepository(storeMock);
-            var parameters = new NavigationParameters() {{"repositoryStore", storeMock.Object} };
-            var model = CreateViewModel();
-            var weatherDate = new DateTime(2020, 01, 01, 10, 59, 00);
-            model.WeatherData = new WeatherData {Date = weatherDate};
-
-            await model.PerformRequiredTasks(parameters);
-
-            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Once);
+            return new MainPageViewModel(dateProvider.Object, preferences.Object, serviceMock.Object, clientMock.Object);
         }
 
         private Mock<IDateProvider> PrepareDateProvider()
@@ -76,32 +95,37 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         }
 
         [Fact]
-        public async Task PerformRequiredTasks_WeatherDataDateDiffIsSmallerThan1Hour_WeatherDataDoesNotChange()
+        public async Task PerformRequiredTasks_GetsDailyForecasts()
         {
-            var storeMock = new Mock<IWeatherRepositoryStore>();
-            PrepareCurrentWeatherRepository(storeMock);
-            var parameters = new NavigationParameters() {{"repositoryStore", storeMock.Object} };
-            var model = CreateViewModel();
-            var weatherDate = new DateTime(2020, 01, 01, 11, 59, 00);
-            model.WeatherData = new WeatherData {Date = weatherDate};
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
 
             await model.PerformRequiredTasks(parameters);
 
+            mock.Verify(x => x.GetDailyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
+        }
 
-            storeMock.Verify(x => x.CurrentWeatherRepository.GetWeatherDataFromRepository(), Times.Never);
+        [Fact]
+        public async Task PerformRequiredTasks_GetsHourlyForecasts()
+        {
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
+
+            await model.PerformRequiredTasks(parameters);
+
+            mock.Verify(x => x.GetHourlyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
         }
 
         [Fact]
         public async Task PerformRequiredTasks_RepositoryContainsDailyForecasts_SetsPropertyToTrue()
         {
-            var repositoryMock = new Mock<IWeatherRepositoryStore>();
-            var dailyRepository = new Mock<IWeatherRepository>();
-            repositoryMock.Setup(x => x.DailyForecastsRepository).Returns(dailyRepository.Object);
-            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
-            var model = CreateViewModel();
-            await model.PerformRequiredTasks(parameters);
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
 
-            await model.CheckIfRepositoryContainsDailyAndHourlyForecasts();
+            await model.PerformRequiredTasks(parameters);
 
             Assert.True(model.ContainsDailyForecasts);
         }
@@ -109,42 +133,137 @@ namespace WeatherStation.App.Tests.ViewModelsTests
         [Fact]
         public async Task PerformRequiredTasks_RepositoryContainsHourlyForecasts_SetsPropertyToTrue()
         {
-            var repositoryMock = new Mock<IWeatherRepositoryStore>();
-            var hourlyForecasts = new Mock<IWeatherRepository>();
-            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
-            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
-            var model = CreateViewModel();
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
+
             await model.PerformRequiredTasks(parameters);
 
-            await model.CheckIfRepositoryContainsDailyAndHourlyForecasts();
-
             Assert.True(model.ContainsHourlyForecasts);
-
-        }
-
-        private static Mock<IWeatherRepositoryStore> PrepareRepositoryMockWithHourlyForecasts()
-        {
-            var repositoryMock = new Mock<IWeatherRepositoryStore>();
-            var hourlyRepositoryMock = new Mock<IWeatherRepository>();
-            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyRepositoryMock.Object);
-            return repositoryMock;
         }
 
         [Fact]
         public async Task PerformRequiredTasks_ThrowsException_ExceptionHandled()
         {
-            var repositoryMock = new Mock<IWeatherRepositoryStore>();
-            var hourlyForecasts = new Mock<IWeatherRepository>();
-            hourlyForecasts.Setup(x => x.GetWeatherDataFromRepository()).Throws(new Exception());
-            repositoryMock.Setup(x => x.HourlyForecastsRepository).Returns(hourlyForecasts.Object);
-            var parameters = new NavigationParameters() {{"repositoryStore", repositoryMock.Object} };
+            var clientMock = CreateClientMock();
+            clientMock.Setup(x => x.GetRepositoryInfoAsync(It.IsAny<InfoRequest>(), null, null, default)).Throws(new RpcException(Status.DefaultCancelled));
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
             var serviceMock = new Mock<IExceptionHandlingService>();
-            var model = CreateViewModel(serviceMock);
+            var model = CreateViewModel(clientMock, serviceMock);
 
             await model.PerformRequiredTasks(parameters);
 
-            serviceMock.Verify(x => x.HandleException(It.IsAny<Exception>()));
+            serviceMock.Verify(x => x.HandleException(It.IsAny<RpcException>()));
         }
 
+        [Fact]
+        public async Task PerformRequiredTasks_CreatesChart()
+        {
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
+
+            await model.PerformRequiredTasks(parameters);
+
+            Assert.NotNull(model.Chart);
+        }
+
+        [Fact]
+        public async Task PerformRequiredTasks_SetsForecastsTitle()
+        {
+            var mock = CreateClientMock();
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            var model = CreateViewModel(mock);
+
+            await model.PerformRequiredTasks(parameters);
+
+            Assert.NotEmpty(model.ForecastsTitle);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_GetsCurrentWeatherData()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+
+            model.RefreshDataCommand.Execute();
+
+            mock.Verify(x => x.GetCurrentWeatherAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_SetsWeatherDataProperty()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.WeatherData = null;
+
+            model.RefreshDataCommand.Execute();
+
+            Assert.NotNull(model.WeatherData);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_GetsDailyForecasts()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.ContainsDailyForecasts = true;
+
+            model.RefreshDataCommand.Execute();
+
+            mock.Verify(x => x.GetDailyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_SetsDailyForecastsList()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.WeatherDailyData = null;
+            model.ContainsDailyForecasts = true;
+
+            model.RefreshDataCommand.Execute();
+
+            Assert.NotNull(model.WeatherDailyData);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_GetsHourlyForecasts()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.ContainsHourlyForecasts = true;
+
+            model.RefreshDataCommand.Execute();
+
+            mock.Verify(x => x.GetHourlyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_SetsHourlyForecastsList()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.WeatherHourlyData = null;
+            model.ContainsHourlyForecasts = true;
+
+            model.RefreshDataCommand.Execute();
+
+            Assert.NotNull(model.WeatherHourlyData);
+        }
+
+        [Fact]
+        public void RefreshDataCommand_SetsChart()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.Chart = null;
+            model.ContainsDailyForecasts = true;
+
+            model.RefreshDataCommand.Execute();
+
+            Assert.NotNull(model.Chart);
+        }
     }
 }

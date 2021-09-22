@@ -51,7 +51,6 @@ namespace WeatherStation.App.ViewModels
             DateProvider = dateProvider;
             _handlingService = service;
             _preferences = preferences;
-            GetDataCommand = new DelegateCommand(async () => await GetData());
             ChangeChartCommand = new DelegateCommand(async () => await ChangeChart());
             ChangeForecastsTypeCommand = new DelegateCommand(async () => await ChangeForecastsType());
             RefreshDataCommand = new DelegateCommand(async () => await RefreshData());
@@ -73,7 +72,6 @@ namespace WeatherStation.App.ViewModels
 
         public bool ContainsDailyForecasts { get; set; }
         public bool ContainsHourlyForecasts { get; set; }
-        public DelegateCommand GetDataCommand { get; set; }
         public DelegateCommand ChangeChartCommand { get; set; }
         public DelegateCommand ChangeForecastsTypeCommand { get; set; }
         public DelegateCommand RefreshDataCommand { get; set; }

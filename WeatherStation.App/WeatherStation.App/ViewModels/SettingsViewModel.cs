@@ -11,6 +11,7 @@ using WeatherStation.Library;
 using WeatherStation.App.Utilities;
 using static WeatherStation.App.Weather;
 using Grpc.Core;
+using Prism.Ioc;
 
 namespace WeatherStation.App.ViewModels
 {
@@ -23,6 +24,7 @@ namespace WeatherStation.App.ViewModels
         private IGeocodingRepository _geocodingRepository;
         private IAlertService _alertService;
         private IExceptionHandlingService _handlingService;
+        private IContainerRegistry _container;
         private double _latitude;
         private double _longitude;
         private WeatherClient _client;
@@ -51,7 +53,7 @@ namespace WeatherStation.App.ViewModels
         public DelegateCommand TestConnectionCommand {get; set; }
         public bool AreCoordinatesUsed { get; private set; } = false;
 
-        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository, IExceptionHandlingService service, WeatherClient client)
+        public SettingsViewModel(IEnumerable<IWeatherRepositoryStore> weatherRepositoryStores, IPreferences preferences, IGeolocation geolocation, IAlertService alertService, IGeocoding geocoding, IGeocodingRepository geocodingRepository, IExceptionHandlingService service, WeatherClient client, IContainerRegistry container)
         {
             _handlingService = service;
             _geocodingRepository = geocodingRepository;
@@ -61,6 +63,7 @@ namespace WeatherStation.App.ViewModels
             _alertService = alertService;
             _geocoding = geocoding;
             _client = client;
+            _container = container;
 
             CityName = preferences.Get("CityName", "");
             ServerAddress = preferences.Get("Address", "");
@@ -190,17 +193,9 @@ namespace WeatherStation.App.ViewModels
             _preferences.Set("Address", _serverAddress);
             var channel = new Channel(_serverAddress, null);
             var client = new WeatherClient(channel);
-            _client = client;
+            _container.RegisterInstance(client);
 
             return Task.CompletedTask;
-        }
-
-        private async Task TestConnection()
-        {
-            if(await IsAddressValid(_serverAddress))
-                await _alertService.DisplayAlert("Connected", "Connected successfully, address is valid.");
-            else
-                await _alertService.DisplayAlert("Invalid Address", "There were some problems while connecting to the server, try to provide another server address and try again");
         }
 
         private async Task<bool> IsAddressValid(string address)
@@ -219,5 +214,12 @@ namespace WeatherStation.App.ViewModels
             return true;
         }
 
+        private async Task TestConnection()
+        {
+            if(await IsAddressValid(_serverAddress))
+                await _alertService.DisplayAlert("Connected", "Connected successfully, address is valid.");
+            else
+                await _alertService.DisplayAlert("Invalid Address", "There were some problems while connecting to the server, try to provide another server address and try again");
+        }
     }
 }
