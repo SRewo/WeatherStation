@@ -61,8 +61,6 @@ namespace WeatherStation.App.ViewModels
         {
             var collection = new List<MenuItem>();
             collection.AddRange(await CreateRepositoryMenuItems());
-            var settingsMenuItem = await CreateSettingsMenuItem();
-            collection.Add(settingsMenuItem);
             return collection.ToArray();
         }
 
@@ -83,17 +81,6 @@ namespace WeatherStation.App.ViewModels
                 Parameters = new NavigationParameters {{"repository", repositoryEnum}}
             };
             return Task.FromResult(item);
-        }
-
-        private Task<MenuItem> CreateSettingsMenuItem()
-        {
-            var item = new MenuItem
-            {
-                TargetView = nameof(SettingsView),
-                Title = "Settings",
-            };
-            return Task.FromResult(item);
-
         }
 
         public async Task OpenViewAsync()

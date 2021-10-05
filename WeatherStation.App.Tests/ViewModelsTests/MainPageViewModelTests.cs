@@ -115,6 +115,7 @@ namespace WeatherStation.App.Tests.ViewModelsTests
 
             await model.PerformRequiredTasks(parameters);
 
+            Assert.NotEmpty(model.WeatherData.Date.ToDateTime().ToString("dddd HH:mm"));
             mock.Verify(x => x.GetHourlyForecastsAsync(It.IsAny<WeatherRequest>(), null, null, default), Times.Once);
         }
 
@@ -264,6 +265,116 @@ namespace WeatherStation.App.Tests.ViewModelsTests
             model.RefreshDataCommand.Execute();
 
             Assert.NotNull(model.Chart);
+        }
+
+        [Fact]
+        public async Task ChangeChartCommand_ChangesChart()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            await model.PerformRequiredTasks(parameters);
+            var currentChart = model.Chart;
+
+            model.ChangeChartCommand.Execute();
+
+            Assert.NotEqual(currentChart, model.Chart);
+        }
+
+        [Fact]
+        public void ChangeChartCommand_ChangesFlag()
+        {
+            var mock = CreateClientMock();
+            var model = CreateViewModel(mock);
+            model.IsTemperatureChartUsed = false;
+
+            model.ChangeChartCommand.Execute();
+
+            Assert.True(model.IsTemperatureChartUsed);
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_ChangesFlag()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            model.AreHourlyForecastsSelected = false;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.True(model.AreHourlyForecastsSelected);
+        }
+
+        private async Task<MainPageViewModel> CreatePreparedViewModel(Mock<WeatherClient> mock)
+        {
+            var model = CreateViewModel(mock);
+            var parameters = new NavigationParameters() { { "repository", Repositories.Accuweather } };
+            await model.PerformRequiredTasks(parameters);
+
+            return model;
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_ChangesForecastsTitle()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            var currentTitle = model.ForecastsTitle;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.NotEqual(currentTitle, model.ForecastsTitle);
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_ChangesChart()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            var currentChart = model.Chart;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.NotEqual(currentChart, model.Chart);
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_OnlyOneTypeOfForecastAvaliable_DoesNotChangeForecastsTitle()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            var currentTitle = model.ForecastsTitle;
+            model.AreBothForecastTypesAvailable = false;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.Equal(currentTitle, model.ForecastsTitle);
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_OnlyOneTypeOfForecastAvaliable_DoesNotChangeFlag()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            var flag = model.AreHourlyForecastsSelected;
+            model.AreBothForecastTypesAvailable = false;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.Equal(flag, model.AreHourlyForecastsSelected);
+        }
+
+        [Fact]
+        public async Task ChangeForecastsTypeCommand_OnlyOneTypeOfForecastAvaliable_DoesNotChangeChart()
+        {
+            var mock = CreateClientMock();
+            var model = await CreatePreparedViewModel(mock);
+            var chart = model.Chart;
+            model.AreBothForecastTypesAvailable = false;
+
+            model.ChangeForecastsTypeCommand.Execute();
+
+            Assert.Equal(chart, model.Chart);
         }
     }
 }

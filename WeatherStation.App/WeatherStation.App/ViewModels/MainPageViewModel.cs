@@ -318,6 +318,9 @@ namespace WeatherStation.App.ViewModels
 
         private async Task ChangeForecastsType()
         {
+            if(!AreBothForecastTypesAvailable)
+                return;
+
             AreHourlyForecastsSelected = !_areHourlyForecastsSelected;
 
             await Task.WhenAll(

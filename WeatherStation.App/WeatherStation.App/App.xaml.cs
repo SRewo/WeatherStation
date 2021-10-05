@@ -88,7 +88,6 @@ namespace WeatherStation.App
             containerRegistry.RegisterForNavigation<MainPageView, MainPageViewModel>();
             containerRegistry.RegisterForNavigation<NavigationPage>();
             containerRegistry.RegisterForNavigation<DetailPageView>();
-            containerRegistry.RegisterForNavigation<SettingsView, SettingsViewModel>();
         }
 
         private void RegisterXamarinEssentialsTypes(IContainerRegistry containerRegistry)
@@ -100,15 +99,10 @@ namespace WeatherStation.App
 
         private void RegisterGrpcClient(IContainerRegistry containerRegistry)
         {
-            var ipAdress = Current.Container.Resolve<IPreferences>().Get("Address","192.168.1.101");
+            var ipAdress = "192.168.1.101";
             Channel channel = new Channel(ipAdress, ChannelCredentials.Insecure);
             var client = new Weather.WeatherClient(channel);
             containerRegistry.RegisterInstance(client);
-        }
-
-        private string GetLanguageCode()
-        {
-            return DeviceInfo.Platform.Equals(DevicePlatform.Android) ? CultureInfo.CurrentUICulture.IetfLanguageTag : "PL";
         }
 
         protected override async void OnInitialized()
