@@ -58,7 +58,7 @@ namespace WeatherStation.Library.Repositories
             var result = await _restClient.ExecuteAsync(query, CancellationToken.None);
 
             if (!result.IsSuccessful)
-                throw new HttpRequestException(result.StatusCode + ": " + result.ErrorMessage);
+                throw new HttpRequestException($"{result.Content} {result.StatusCode}: {result.ErrorMessage}");
             return result;
         }
 

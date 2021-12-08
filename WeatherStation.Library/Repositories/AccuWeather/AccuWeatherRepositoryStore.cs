@@ -59,7 +59,7 @@ namespace WeatherStation.Library.Repositories.AccuWeather
                 new AccuWeatherHourlyForecastRepository(_restClient,$"forecasts/v1/hourly/12hour/{cityCode}", _apiKey, _provider);
             DailyForecastsRepository =
                 new AccuWeatherDailyForecastRepository(_restClient, $"forecasts/v1/daily/5day/{cityCode}", _apiKey, _provider);
-            await ChangeLanguage(Language);
+            await ChangeLanguage(Language).ConfigureAwait(false);
         }
 
         public async Task ChangeCity(Coordinates coordinates)
@@ -89,16 +89,6 @@ namespace WeatherStation.Library.Repositories.AccuWeather
         }
 
         public Task ChangeLanguage(string language)
-        {
-            if (Language == language)
-                return Task.CompletedTask;
-
-            Language = language;
-
-            return ChangeLanguageInRepositories(language);
-        }
-
-        private Task ChangeLanguageInRepositories(string language)
         {
             CurrentWeatherRepository.Language = language;
             DailyForecastsRepository.Language = language;

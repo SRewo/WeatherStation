@@ -46,7 +46,6 @@ namespace WeatherStation.Services
         {
             services.AddGrpc();
             services.AddSingleton(CreateRepositoryDictionary());
-            services.AddSingleton(CreateGeocodingRepository());
             services.AddSingleton(CreateMapper());
             services.AddGrpcReflection();
         }
@@ -111,14 +110,6 @@ namespace WeatherStation.Services
                 restClient,
                 _configuration["Preferences:Language"],
                 _coordinates);
-
-            return repository;
-        }
-
-        private IGeocodingRepository CreateGeocodingRepository()
-        {
-            var geocodingRestClient = new RestClient("http://api.positionstack.com/v1/");
-            var repository = new PositionstackGeocodingRepository(geocodingRestClient, AppApiKeys.PositionstackApiKey);
 
             return repository;
         }
