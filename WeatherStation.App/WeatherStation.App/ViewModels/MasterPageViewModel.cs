@@ -8,14 +8,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using WeatherStation.App.Utilities;
 using WeatherStation.App.Views;
-using WeatherStation.Library.Interfaces;
 using static WeatherStation.App.Weather;
 
 namespace WeatherStation.App.ViewModels
 {
     public class MasterPageViewModel : BindableBase
     {
-        private readonly WeatherClient _client;
         private ObservableCollection<MenuItem> _menuItems;
         private MenuItem _selectedItem;
         private readonly INavigationService _navigationService;
@@ -35,10 +33,9 @@ namespace WeatherStation.App.ViewModels
 
         public DelegateCommand OpenViewCommand { get; set; }
 
-        public MasterPageViewModel(WeatherClient client, INavigationService service, IExceptionHandlingService exceptionHandling)
+        public MasterPageViewModel(INavigationService service, IExceptionHandlingService exceptionHandling)
         {
             _exceptionHandlingService = exceptionHandling;
-            _client = client;
             _navigationService = service;
             OpenViewCommand = new DelegateCommand(async () => await OpenViewAsync());
             MenuItems = new ObservableCollection<MenuItem>(CreateMenuItems().Result);
@@ -66,9 +63,9 @@ namespace WeatherStation.App.ViewModels
 
         private async Task<IList<MenuItem>> CreateRepositoryMenuItems()
         {
-            var repositories = await _client.GetRepositoryListAsync(new ListRequest());
             var menuItems = new List<MenuItem>();
-            foreach(var r in repositories.ListOfRepositories) menuItems.Add(await CreateMenuItemFromRepository(r));
+            var repositories = Enum.GetValues(typeof(Repositories)).Cast<Repositories>();
+            foreach(var r in repositories) menuItems.Add(await CreateMenuItemFromRepository(r));
             return menuItems;
         }
 

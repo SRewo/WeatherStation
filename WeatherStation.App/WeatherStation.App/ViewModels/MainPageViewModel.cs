@@ -55,7 +55,7 @@ namespace WeatherStation.App.ViewModels
             ChangeForecastsTypeCommand = new DelegateCommand(async () => await ChangeForecastsType());
             RefreshDataCommand = new DelegateCommand(async () => await RefreshData());
 
-            CityName = _preferences.Get("CityName", "");
+            CityName = _preferences.Get("CityName", "Pszczyna");
         }
 
         public WeatherMessage WeatherData
@@ -222,8 +222,8 @@ namespace WeatherStation.App.ViewModels
             var request = new InfoRequest{Repository = _repositoryEnum};
             var repositoryInfo = await _client.GetRepositoryInfoAsync(request);
 
-            ContainsDailyForecasts = repositoryInfo.ContainsDailyForecasts;
-            ContainsHourlyForecasts = repositoryInfo.ContainsHourlyForecasts;
+            ContainsDailyForecasts = true;
+            ContainsHourlyForecasts = true;
 
             AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
             AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;

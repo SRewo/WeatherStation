@@ -20,7 +20,7 @@ using DeviceInfo = Xamarin.Essentials.DeviceInfo;
 using WeatherStation.App.Utilities;
 using WeatherStation.Library.Repositories.Weatherbit;
 using Grpc.Core;
-using Grpc.Net.Client;
+using System.Net.Http;
 
 namespace WeatherStation.App
 {
@@ -40,19 +40,13 @@ namespace WeatherStation.App
             await Permissions.RequestAsync<Permissions.StorageWrite>();
             await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
 
+            base.OnStart();
             await LogAppStarting();
         }
 
         private async Task LogAppStarting()
         {
-            try
-            {
                 await App.Current.Container.Resolve<ILogger>().Log("App Started");
-            }
-            catch(Exception ex)
-            {
-                await App.Current.Container.Resolve<ExceptionHandlingService>().HandleException(ex);
-            }
         }
 
         protected override void OnSleep()
@@ -76,7 +70,7 @@ namespace WeatherStation.App
             containerRegistry.RegisterInstance<IWriteService>(new TxtWriteService(
                 App.Current.Container.Resolve<System.IO.Abstractions.IFileSystem>(),
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                $"Log-{DateTime.Now.ToString("g")}"));
+                $"Log-{DateTime.Now.ToString("dd-mm-yy_HH-mm")}"));
 
             containerRegistry.Register<ILogger, Logger>();
             containerRegistry.Register<IErrorAlertService, ErrorAlertService>();
@@ -99,8 +93,8 @@ namespace WeatherStation.App
 
         private void RegisterGrpcClient(IContainerRegistry containerRegistry)
         {
-            var ipAdress = "192.168.1.101";
-            Channel channel = new Channel(ipAdress, ChannelCredentials.Insecure);
+            var ipAdress = "192.168.1.101:80";
+            var channel = new Channel(ipAdress, ChannelCredentials.Insecure);
             var client = new Weather.WeatherClient(channel);
             containerRegistry.RegisterInstance(client);
         }
@@ -113,7 +107,7 @@ namespace WeatherStation.App
 
         private Task<INavigationResult> NavigateToMainView()
         {
-            var parameters = new NavigationParameters {{"repositoryStore", Container.Resolve<IWeatherRepositoryStore>("Accuweather")}};
+            var parameters = new NavigationParameters { { "repository", Repositories.Accuweather} };
             return NavigationService.NavigateAsync("DetailPageView/NavigationPage/MainPageView", parameters);
         }
 

@@ -13,6 +13,7 @@
 
     <ContentPage.Resources>
         <utilities:InverseBoolConverter x:Key="Utilities:InverseBoolConverter" />
+        <utilities:TimestampToStringConverter x:Key="Utilities:TimestampToStringConverter"/>
     </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
@@ -34,11 +35,11 @@
                     </Grid.ColumnDefinitions>
                     <Image Source="https://image.flaticon.com/icons/svg/3093/3093303.svg"/>
                     <StackLayout Grid.Row="0" Grid.Column="1">
-                        <Label FontFamily="Roboto" FontSize="18" TextColor="black" Text="{Binding Path= WeatherData.Date, StringFormat='{}{0:HH:mm dddd}'}"></Label>
+                        <Label FontFamily="Roboto" FontSize="18" TextColor="black" Text="{Binding Path= WeatherData.Date, Converter={StaticResource Utilities:TimestampToStringConverter}, ConverterParameter='HH:mm dddd'}"></Label>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.WeatherDescription}"></Label>
                         <StackLayout Orientation="Horizontal">
-                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path=WeatherData.Temperature, StringFormat='{}{0}| '} "></Label>
-                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.TemperatureApparent}"></Label>
+                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path=WeatherData.Temperature.Value, StringFormat='{}{0}°C| '} "></Label>
+                            <Label FontSize="26" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.TemperatureApparent.Value, StringFormat='{}{0}°C'}"></Label>
                         </StackLayout>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Pressure, StringFormat='{}{0} hPa'}"></Label>
                         <Label FontSize="20" FontFamily="Roboto" TextColor="Black" Text="{Binding Path= WeatherData.Humidity, StringFormat='Humidity: {0}%'}"></Label>
@@ -73,11 +74,11 @@
                                             <RowDefinition Height="25"/>
                                             <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
-                                            <Label Grid.Row="0" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMax, StringFormat='{}{0}'}" HorizontalOptions="End"/>
-                                            <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMin}" HorizontalOptions="End"/>
+                                            <Label Grid.Row="0" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMax.Value, StringFormat='{}{0}°C'}" HorizontalOptions="End"/>
+                                            <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureMin.Value, StringFormat='{}{0}°C'}" HorizontalOptions="End"/>
                                             <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" WidthRequest="1" HeightRequest="20" Margin="0,5,0,5" BackgroundColor="Gray"/>
                                             <StackLayout Grid.Row="0" Grid.Column="3" >
-                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, StringFormat='{}{0:dd.MM dddd}'}"></Label>
+                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, Converter={StaticResource Utilities:TimestampToStringConverter} ,ConverterParameter='dd.MM dddd'}"></Label>
                                                 <BoxView HeightRequest="0.25" Margin="5,0,5,0" Color="Gray"/>
                                             </StackLayout>
                                             <Label Grid.Row="1" Grid.Column="3" FontSize="13" FontFamily="Roboto" Text="{Binding WeatherDescription}" VerticalOptions="Start" HorizontalOptions="Center"/>
@@ -106,11 +107,11 @@
                                             <RowDefinition Height="25"/>
                                             <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
-                                            <Label Grid.Row="0" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding Temperature}" HorizontalOptions="End"/>
-                                            <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureApparent}" HorizontalOptions="End"/>
+                                            <Label Grid.Row="0" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding Temperature.Value, StringFormat='{}{0}°C'}"  HorizontalOptions="End"/>
+                                            <Label Grid.Row="1" Grid.Column="1" FontSize="18" FontFamily="Roboto" Text="{Binding TemperatureApparent.Value, StringFormat='{}{0}°C'}" HorizontalOptions="End"/>
                                             <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" WidthRequest="1" HeightRequest="20" Margin="0,5,0,5" BackgroundColor="Gray"/>
                                             <StackLayout Grid.Row="0" Grid.Column="3" >
-                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date, StringFormat='{}{0:dddd HH:mm}'}"></Label>
+                                                <Label FontSize="13" FontAttributes="Bold" FontFamily="Roboto" VerticalOptions="Center" HorizontalOptions="Center" Text="{Binding Date,Converter={StaticResource Utilities:TimestampToStringConverter} ,ConverterParameter='dddd HH:mm'}"></Label>
                                                 <BoxView HeightRequest="0.25" Margin="5,0,5,0" Color="Gray"/>
                                             </StackLayout>
                                             <Label Grid.Row="1" Grid.Column="3" FontSize="13" FontFamily="Roboto" Text="{Binding WeatherDescription}" VerticalOptions="Start" HorizontalOptions="Center"/>
