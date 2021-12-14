@@ -18,7 +18,7 @@ namespace WeatherStation.App.Utilities
 
         protected DateTime GetDateTimeFromMessage(WeatherMessage message)
         {
-            return new DateTime(message.Date.Seconds, DateTimeKind.Utc);
+            return message.Date.ToDateTime();
         }
     }
 
@@ -66,7 +66,7 @@ namespace WeatherStation.App.Utilities
             return new ChartEntry(weatherData.TemperatureMax.Value)
             {
                 Label = GetDateTimeFromMessage(weatherData).ToShortDateString(),
-                ValueLabel = weatherData.TemperatureMax.ToString(),
+                ValueLabel = weatherData.TemperatureMax.Value.ToString() + " °C",
                 Color = GetProperColorRelativeToTemperature(weatherData.TemperatureMax)
             };
         }
@@ -92,7 +92,7 @@ namespace WeatherStation.App.Utilities
             return new ChartEntry(weatherData.Temperature.Value)
             {
                 Label = GetDateTimeFromMessage(weatherData).ToShortTimeString(),
-                ValueLabel = weatherData.Temperature.ToString(),
+                ValueLabel = weatherData.Temperature.Value.ToString() + " °C",
                 Color = GetProperColorRelativeToTemperature(weatherData.Temperature)
             };
         }

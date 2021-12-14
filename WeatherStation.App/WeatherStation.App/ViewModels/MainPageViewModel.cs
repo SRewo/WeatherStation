@@ -222,8 +222,8 @@ namespace WeatherStation.App.ViewModels
             var request = new InfoRequest{Repository = _repositoryEnum};
             var repositoryInfo = await _client.GetRepositoryInfoAsync(request);
 
-            ContainsDailyForecasts = true;
-            ContainsHourlyForecasts = true;
+            ContainsDailyForecasts = repositoryInfo.ContainsDailyForecasts;
+            ContainsHourlyForecasts = repositoryInfo.ContainsHourlyForecasts;
 
             AreBothForecastTypesAvailable = ContainsDailyForecasts && ContainsHourlyForecasts;
             AreHourlyForecastsSelected = !AreBothForecastTypesAvailable && ContainsHourlyForecasts;
