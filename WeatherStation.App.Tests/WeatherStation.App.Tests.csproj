@@ -1,18 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>.net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extras.Moq" Version="6.1.0" />
+    <PackageReference Include="Docker.DotNet" Version="3.125.5" />
+    <PackageReference Include="Google.Protobuf" Version="3.19.1" />
+    <PackageReference Include="Grpc" Version="2.42.0" />
     <PackageReference Include="Grpc.Core.Testing" Version="2.42.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.41.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="Moq" Version="4.16.1" />
-    <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="14.0.3" />
+    <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="14.0.13" />
     <PackageReference Include="Tynamix.ObjectFiller" Version="1.5.6" />
+    <PackageReference Include="Unity" Version="5.11.10" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -26,6 +31,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WeatherStation.App\WeatherStation.App\WeatherStation.App.csproj" />
+    <Protobuf Include="IntegrationTests\weather.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="IntegrationTests\weather.proto">
+      <GrpcServices>Client</GrpcServices>
+    </None>
   </ItemGroup>
 
 </Project>
